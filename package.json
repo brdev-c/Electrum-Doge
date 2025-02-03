@@ -1,0 +1,121 @@
+{
+  "name": "doge-wallet-desktop",
+  "version": "1.0.0",
+  "description": "Electrum Doge desktop wallet",
+  "main": "src/main/electron.js",
+  "private": true,
+  "scripts": {
+    "start": "concurrently \"npm run react-start\" \"npm run electron\"",
+    "react-start": "cross-env BROWSER=none react-app-rewired start",
+    "electron": "wait-on http://127.0.0.1:3000 && electron .",
+    "build": "react-app-rewired build",
+    "rebuild-native": "electron-rebuild",
+    "dist": "electron-builder",
+    "postinstall": "electron-builder install-app-deps"
+  },
+  "build": {
+    "appId": "Electrum Doge",
+    "productName": "Electrum Doge",
+    "directories": {
+      "buildResources": "build-resources"
+    },
+    "files": [
+      "build/**/*",
+      "public/**/*",
+      "src/**/*",
+      "package.json"
+    ],
+    "extraResources": [
+      {
+        "from": "public/",
+        "to": "public",
+        "filter": [
+          "**/*"
+        ]
+      }
+    ],
+    "win": {
+      "icon": "public/images/electrum_logo.ico",
+      "target": "nsis"
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": true,
+      "installerIcon": "public/images/electrum_logo.ico",
+      "uninstallerIcon": "public/images/electrum_logo.ico",
+      "uninstallDisplayName": "Uninstall Electrum Doge",
+      "license": "LICENSE.txt",
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true
+    }
+  },
+  "dependencies": {
+    "@chakra-ui/react": "^3.4.0",
+    "@craco/craco": "^7.1.0",
+    "@emotion/react": "^11.14.0",
+    "@emotion/styled": "^11.14.0",
+    "@ledgerhq/hw-app-btc": "^6.27.1",
+    "@ledgerhq/hw-transport": "^6.31.4",
+    "@ledgerhq/hw-transport-node-hid": "^6.27.1",
+    "@ledgerhq/hw-transport-webusb": "^6.29.4",
+    "axios": "^0.27.2",
+    "bip32": "5.0.0-rc.0",
+    "bip39": "^3.0.4",
+    "bitcoinjs-lib": "^6.1.0",
+    "chart.js": "^4.4.7",
+    "chartjs-plugin-annotation": "^3.1.0",
+    "chartjs-plugin-zoom": "^2.2.0",
+    "ecpair": "2.0.0",
+    "electrum-client": "^0.0.6",
+    "framer-motion": "^12.0.1",
+    "jsqr": "^1.4.0",
+    "net": "^1.0.2",
+    "os-browserify": "^0.3.0",
+    "qrcode.react": "^4.2.0",
+    "react": "^18.2.0",
+    "react-chartjs-2": "^5.3.0",
+    "react-dom": "^18.2.0",
+    "react-icons": "^5.4.0",
+    "react-router-dom": "^6.8.2",
+    "tiny-secp256k1": "^1.1.6",
+    "wait-on": "^7.0.1",
+    "wif": "^2.0.6",
+    "zxcvbn": "^4.4.2"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.26.7",
+    "@babel/plugin-proposal-private-property-in-object": "^7.21.11",
+    "@babel/preset-env": "^7.26.7",
+    "babel-loader": "^9.2.1",
+    "buffer": "^6.0.3",
+    "concurrently": "^9.1.2",
+    "cross-env": "^7.0.3",
+    "crypto-browserify": "^3.12.1",
+    "electron": "^24.0.0",
+    "electron-builder": "^23.6.0",
+    "electron-rebuild": "^3.2.9",
+    "eslint": "^8.57.1",
+    "eslint-plugin-react-hooks": "^5.1.0",
+    "patch-package": "^8.0.0",
+    "path-browserify": "^1.0.1",
+    "process": "^0.11.10",
+    "react-app-rewired": "^2.2.1",
+    "react-scripts": "^5.0.1",
+    "stream-browserify": "^3.0.0",
+    "webpack": "^5.97.1",
+    "webpack-cli": "^6.0.1"
+  },
+  "browserslist": {
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
+  }
+}
