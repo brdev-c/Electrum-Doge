@@ -1,4 +1,3 @@
-// server/src/controllers/scanElectrumController.js
 import axios from 'axios';
 import * as cheerio from 'cheerio';
 
@@ -18,8 +17,8 @@ export async function scanDogeElectrumServers(req, res) {
 
       const host   = $(tds[0]).text().trim();
       const port   = $(tds[1]).text().trim();
-      const proto  = $(tds[2]).text().trim(); // "tcp" / "ssl"
-      const status = $(tds[10]).text().trim(); // "OK" / ...
+      const proto  = $(tds[2]).text().trim(); 
+      const status = $(tds[10]).text().trim(); 
 
       if (status === 'OK') {
         result.push({
