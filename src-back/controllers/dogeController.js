@@ -1,43 +1,33 @@
-/***************************************
- *  server/src/controllers/dogeController.js
- ***************************************/
 import net from 'net';
 import tls from 'tls';
 import crypto from 'crypto';
 import * as bitcoin from 'bitcoinjs-lib';
 import { dogecoinNetwork } from '../services/networks.js';
 
-// Параметры по умолчанию
 const DEFAULT_HOST = 'electrum1.cipig.net';
 const DEFAULT_PORT = 20060;
 const DEFAULT_PROTO = 'ssl';
 
-// Глобальные переменные для соединения с Electrum
 let electrumSocket = null;
 let isConnected = false;
 let currentHost = DEFAULT_HOST;
 let currentPort = DEFAULT_PORT;
 let currentProto = DEFAULT_PROTO;
 
-let globalRequestId = 1;  // JSON-RPC id счётчик
-const pendingRequests = new Map(); // msgId -> { resolve, reject }
+let globalRequestId = 1; 
+const pendingRequests = new Map(); 
 
-// SSE-подписки (пример)
-const subscriptions = new Map();  // channelId -> { res, addresses: string[] }
-const scripthashMap = new Map();  // scripthash -> Set(channelId,...)
+const subscriptions = new Map();  
+const scripthashMap = new Map(); 
 
-/**
- * Преобразование адреса в scripthash
- */
+
 function addressToScriptHash(dogeAddress) {
   const scriptPubKey = bitcoin.address.toOutputScript(dogeAddress, dogecoinNetwork);
   const hash = bitcoin.crypto.sha256(scriptPubKey);
   return Buffer.from(hash.reverse()).toString('hex');
 }
 
-/**
- * Инициализация подключения к Electrum (при необходимости)
- */
+
 async function initElectrumConnectionIfNeeded(host, port, proto) {
   if (
     electrumSocket &&
@@ -49,7 +39,6 @@ async function initElectrumConnectionIfNeeded(host, port, proto) {
     console.log('[initElectrumConnectionIfNeeded] Уже подключены к', currentHost, currentPort, currentProto);
     return;
   }
-  // Закрываем старое соединение, если оно есть
   if (electrumSocket) {
     try {
       electrumSocket.end();
@@ -106,11 +95,8 @@ async function initElectrumConnectionIfNeeded(host, port, proto) {
   });
 }
 
-/**
- * Обработка входящих Electrum-сообщений (RPC-ответы и push-сообщения)
- */
+
 function handleElectrumMessage(msg) {
-  // Если это RPC-ответ (есть id)
   if (typeof msg.id !== 'undefined') {
     const pend = pendingRequests.get(msg.id);
     if (!pend) return;
@@ -124,7 +110,6 @@ function handleElectrumMessage(msg) {
     }
     return;
   }
-  // Если это push-сообщение (подписка)
   if (msg.method === 'blockchain.scripthash.subscribe') {
     const [scripthash, status] = msg.params;
     const channelIds = scripthashMap.get(scripthash);
@@ -145,9 +130,7 @@ function handleElectrumMessage(msg) {
   }
 }
 
-/**
- * Выполнение RPC-запроса к Electrum
- */
+
 function electrumRequest(method, params) {
   return new Promise((resolve, reject) => {
     if (!electrumSocket || !isConnected) {
@@ -161,18 +144,14 @@ function electrumRequest(method, params) {
   });
 }
 
-/**
- * Удобная обёртка для вызова RPC
- */
+
 async function electrumCall(host, port, proto, method, params) {
   await initElectrumConnectionIfNeeded(host, port, proto);
   console.log(`[electrumCall] Метод "${method}" с параметрами:`, params);
   return electrumRequest(method, params);
 }
 
-/**
- * SSE вспомогательные функции
- */
+
 function pushSseMessage(res, data) {
   res.write(`data: ${JSON.stringify(data)}\n\n`);
 }
@@ -196,23 +175,16 @@ function cleanupChannel(channelId) {
   console.log('[cleanupChannel] Канал удалён:', channelId);
 }
 
-/**
- * Функция-обёртка для проверки и исправления raw-транзакции.
- * Если после 4-байтовой версии отсутствует корректный varint входов,
- * вставляем "01" (для случая одного входа).
- */
+
 function fixRawTransaction(rawHex) {
   console.log('[fixRawTransaction] Исходная rawHex:', rawHex);
   if (typeof rawHex !== 'string' || rawHex.length < 10) {
     console.warn('[fixRawTransaction] Строка слишком короткая или не строка.');
     return rawHex;
   }
-  // Первые 8 символов - версия
   const version = rawHex.slice(0, 8);
-  // Следующие 2 символа должны быть varint (обычно "01" для одного входа)
   const varintByte = rawHex.slice(8, 10);
   console.log('[fixRawTransaction] Версия:', version, 'Следующий байт (varint):', varintByte);
-  // Если varint не равен "01", предполагаем, что он отсутствует
   if (varintByte !== "01") {
     console.warn('[fixRawTransaction] Varint отсутствует или некорректен. Вставляем "01" после версии.');
     const fixedRaw = version + "01" + rawHex.slice(8);
@@ -223,9 +195,7 @@ function fixRawTransaction(rawHex) {
   return rawHex;
 }
 
-/**
- * Основные методы контроллера
- */
+
 
 export async function getDogeBalance(req, res) {
   try {
@@ -320,7 +290,6 @@ export async function getDogeTransactionsAll(req, res) {
       return res.status(400).json({ error: 'No valid addresses' });
     }
 
-    // Получаем текущую высоту
     const headerSub = await electrumCall(host, port, proto, 'blockchain.headers.subscribe', []);
     const currentHeight = headerSub.height || 0;
     console.log('[getDogeTransactionsAll] Текущая высота:', currentHeight);
@@ -340,7 +309,6 @@ export async function getDogeTransactionsAll(req, res) {
       }
     }
 
-    // Кэш для raw-транзакций
     const rawTxCache = new Map();
     async function getRawTxCached(txid) {
       if (rawTxCache.has(txid)) return rawTxCache.get(txid);
@@ -370,7 +338,6 @@ export async function getDogeTransactionsAll(req, res) {
       let rawtx = await getRawTxCached(txid);
       if (!rawtx) continue;
       console.log('[getDogeTransactionsAll] До исправления rawtx для', txid, ':', rawtx);
-      // Применяем исправление raw-транзакции
       rawtx = fixRawTransaction(rawtx);
       console.log('[getDogeTransactionsAll] После исправления rawtx для', txid, ':', rawtx);
       let decoded;
@@ -383,7 +350,6 @@ export async function getDogeTransactionsAll(req, res) {
       let sumSpent = 0;
       let sumReceived = 0;
 
-      // Обрабатываем входы (VIN)
       const vinList = decoded.ins;
       const tasks = [];
       for (const vin of vinList) {
@@ -400,7 +366,6 @@ export async function getDogeTransactionsAll(req, res) {
         }
       }
 
-      // Обрабатываем выходы (VOUT)
       for (const out of decoded.outs) {
         try {
           const outAddr = bitcoin.address.fromOutputScript(out.script, dogecoinNetwork);
@@ -408,7 +373,6 @@ export async function getDogeTransactionsAll(req, res) {
             sumReceived += out.value;
           }
         } catch (e) {
-          // пропускаем ошибки
         }
       }
 
@@ -566,10 +530,7 @@ export async function estimateDogeFee(req, res) {
   }
 }
 
-/**
- * getRawTx: Получить сырую транзакцию в hex.
- * Теперь применяется функция fixRawTransaction с дополнительным логированием.
- */
+
 export async function getRawTx(req, res) {
   try {
     let { txid, host, port, proto } = req.query;
@@ -588,10 +549,8 @@ export async function getRawTx(req, res) {
     }
     console.log('[getRawTx] Получена raw-транзакция до исправления:', rawtx);
 
-    // Применяем функцию исправления raw-транзакции
     rawtx = fixRawTransaction(rawtx);
 
-    // Логируем попытку парсинга исправленной транзакции
     try {
       const buf = Buffer.from(rawtx, 'hex');
       const tx = bitcoin.Transaction.fromBuffer(buf);
@@ -607,7 +566,6 @@ export async function getRawTx(req, res) {
   }
 }
 
-// ============== SSE для подписок ===============
 export async function subscribeAddressesHandler(req, res) {
   try {
     let { addresses, host, port, proto } = req.body;
@@ -655,7 +613,6 @@ export function subscribeEventsHandler(req, res) {
       return res.status(404).send('Channel not found');
     }
 
-    // Настройка SSE
     res.writeHead(200, {
       'Content-Type': 'text/event-stream',
       'Cache-Control': 'no-cache',
@@ -668,7 +625,6 @@ export function subscribeEventsHandler(req, res) {
       cleanupChannel(channelId);
     });
 
-    // Первое сообщение
     pushSseMessage(res, {
       hello: 'Subscribed!',
       addresses: sub.addresses,
