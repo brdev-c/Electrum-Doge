@@ -11,7 +11,7 @@ export async function scanDogeElectrumServers(req, res) {
     const result = [];
 
     $('table').eq(0).find('tr').each((i, el) => {
-      if (i === 0) return; // пропустить заголовок
+      if (i === 0) return; 
       const tds = $(el).find('td');
       if (tds.length < 11) return;
 
