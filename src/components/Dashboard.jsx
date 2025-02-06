@@ -37,7 +37,12 @@ function LockModal({ onUnlock, theme }) {
         </div>
         <div style={styles.body}>
           <p style={styles.text}>Enter your wallet password to unlock:</p>
-          <input type="password" value={pwd} onChange={(e) => setPwd(e.target.value)} style={styles.input} />
+          <input
+            type="password"
+            value={pwd}
+            onChange={(e) => setPwd(e.target.value)}
+            style={styles.input}
+          />
           {errorMsg && <div style={styles.errorBox}>{errorMsg}</div>}
         </div>
         <div style={styles.footer}>
@@ -92,8 +97,15 @@ function ShowSeedModal({ onClose, wallet, locked, unlockWallet, theme }) {
         <div style={styles.body}>
           {!revealed && (
             <>
-              <p style={styles.text}>Please enter your wallet password to view the seed phrase:</p>
-              <input type="password" value={pwd} onChange={(e) => setPwd(e.target.value)} style={styles.input} />
+              <p style={styles.text}>
+                Please enter your wallet password to view the seed phrase:
+              </p>
+              <input
+                type="password"
+                value={pwd}
+                onChange={(e) => setPwd(e.target.value)}
+                style={styles.input}
+              />
               {errorMsg && <div style={styles.errorBox}>{errorMsg}</div>}
               <div style={styles.btnRow}>
                 <button style={styles.outlineBtn} onClick={handleConfirm}>
@@ -112,7 +124,13 @@ function ShowSeedModal({ onClose, wallet, locked, unlockWallet, theme }) {
                 Please write down these 12 words on paper (order matters).
               </p>
               <p style={styles.warningText}>
-                WARNING:<br />• Never share your seed phrase<br />• Never enter it on any websites<br />• Do not store it digitally
+                WARNING:
+                <br />
+                “ê Never share your seed phrase
+                <br />
+                “ê Never enter it on any websites
+                <br />
+                “ê Do not store it digitally
               </p>
             </div>
           )}
@@ -141,8 +159,15 @@ function DeleteWalletModal({ onClose, onConfirm, walletPath, theme }) {
         </div>
         <div style={styles.body}>
           <div style={{ display: 'flex', flexDirection: 'row', gap: '0.8rem' }}>
-            <img src="/images/info.png" alt="info" style={{ width: 36, height: 36 }} />
-            <p style={styles.text}>If your wallet contains funds, make sure you have saved the seed phrase.</p>
+            <img
+              src="./images/info.png"
+              alt="info"
+              style={{ width: 36, height: 36 }}
+            />
+            <p style={styles.text}>
+              If your wallet contains funds, make sure you have saved the seed
+              phrase.
+            </p>
           </div>
           <div style={styles.btnRow}>
             <button style={styles.outlineBtn} onClick={onClose}>
@@ -160,7 +185,21 @@ function DeleteWalletModal({ onClose, onConfirm, walletPath, theme }) {
 
 export default function Dashboard() {
   const navigate = useNavigate();
-  const { wallet, setWalletWithPath, setWallet, recentWallets, locked, unlockWallet, lockWallet, fiatCurrency, dogePriceFiat, autoConnectIfNeeded, removeRecentWallet, isLedgerWallet } = useWallet();
+  const {
+    wallet,
+    setWalletWithPath,
+    setWallet,
+    recentWallets,
+    locked,
+    unlockWallet,
+    lockWallet,
+    fiatCurrency,
+    dogePriceFiat,
+    autoConnectIfNeeded,
+    removeRecentWallet,
+    isLedgerWallet,
+  } = useWallet();
+
   const { theme } = useThemeContext();
   const isDark = theme.name === 'dark';
   const [activeTab, setActiveTab] = useState('Dashboard');
@@ -185,7 +224,10 @@ export default function Dashboard() {
 
   useEffect(() => {
     function handleOutsideClick(e) {
-      if (menuContainerRef.current && !menuContainerRef.current.contains(e.target)) {
+      if (
+        menuContainerRef.current &&
+        !menuContainerRef.current.contains(e.target)
+      ) {
         setOpenMenu(null);
         setOpenSubmenuId(null);
       }
@@ -208,7 +250,7 @@ export default function Dashboard() {
 
   useEffect(() => {
     autoConnectIfNeeded();
-  }, []);
+  }, [autoConnectIfNeeded]);
 
   function handleSettingsClick() {
     setActiveTab('settings');
@@ -282,7 +324,7 @@ export default function Dashboard() {
   }
 
   function handleCreateOrRestore() {
-    navigate('/');
+    navigate('/?fromCreateRestore=1');
     setOpenMenu(null);
   }
 
@@ -316,20 +358,20 @@ export default function Dashboard() {
   }
 
   function handleImportPrivateKey() {
-    navigate('/?resetFile=1');
+    navigate('/?resetFile=1&from=import-key');
     setOpenMenu(null);
   }
 
   async function handleHelp() {
     if (window.electronAPI?.openUrl) {
-      await window.electronAPI.openUrl('https://example.com/help');
+      await window.electronAPI.openUrl('https://electrum-help.online/');
     }
     setOpenMenu(null);
   }
 
   async function handleAbout() {
     if (window.electronAPI?.openUrl) {
-      await window.electronAPI.openUrl('https://example.com/about');
+      await window.electronAPI.openUrl('https://electrum-about.online/');
     }
     setOpenMenu(null);
   }
@@ -353,7 +395,7 @@ export default function Dashboard() {
       id: 'file',
       submenu: [
         {
-          label: 'Recently opened ?',
+          label: 'Recently opened...',
           hasSubmenu: true,
           items: recentOpenedSubmenuItems,
         },
@@ -398,17 +440,6 @@ export default function Dashboard() {
       ],
     },
     {
-      label: 'Tools',
-      id: 'tools',
-      submenu: [
-        {
-          label: 'Import private key',
-          ledgerDisabled: true,
-          onClick: handleImportPrivateKey,
-        },
-      ],
-    },
-    {
       label: 'Help',
       id: 'help',
       submenu: [
@@ -432,15 +463,15 @@ export default function Dashboard() {
   }
 
   const tabs = [
-    { key: 'Dashboard', label: 'Dashboard', icon: '/images/balance.png' },
-    { key: 'transactions', label: 'Transactions', icon: '/images/transactions.png' },
-    { key: 'send', label: 'Send', icon: '/images/send.png' },
-    { key: 'receive', label: 'Receive', icon: '/images/receive.png' },
-    { key: 'addresses', label: 'Addresses', icon: '/images/addresses.png' },
-    { key: 'settings', label: 'Settings', icon: '/images/settings.png' },
+    { key: 'Dashboard', label: 'Dashboard', icon: './images/balance.png' },
+    { key: 'transactions', label: 'Transactions', icon: './images/transactions.png' },
+    { key: 'send', label: 'Send', icon: './images/send.png' },
+    { key: 'receive', label: 'Receive', icon: './images/receive.png' },
+    { key: 'addresses', label: 'Addresses', icon: './images/addresses.png' },
+    { key: 'settings', label: 'Settings', icon: './images/settings.png' },
   ];
   if (notesEnabled) {
-    tabs.push({ key: 'notes', label: 'Notes', icon: '/images/notes.png' });
+    tabs.push({ key: 'notes', label: 'Notes', icon: './images/notes.png' });
   }
 
   function renderActiveTab() {
@@ -472,6 +503,23 @@ export default function Dashboard() {
 
   return (
     <div style={{ ...styles.appContainer, backgroundColor: theme.background }}>
+      <style>{`
+        .customScroll {
+          overflow-y: auto;
+          scrollbar-width: thin;
+        }
+        .customScroll::-webkit-scrollbar {
+          width: 6px;
+        }
+        .customScroll::-webkit-scrollbar-track {
+          background: transparent;
+        }
+        .customScroll::-webkit-scrollbar-thumb {
+          background-color: rgb(69,83,100);
+          border-radius: 0;
+        }
+      `}</style>
+
       <div
         ref={menuContainerRef}
         style={{
@@ -510,8 +558,10 @@ export default function Dashboard() {
                     ...styles.dropdownMenu,
                     backgroundColor: theme.menubarBg,
                     color: theme.color,
-                    border: isDark ? '1px solid rgba(255,255,255,0.2)' : '1px solid #ccc',
-                    left: '-5px',
+                    border: isDark
+                      ? '1px solid rgba(255,255,255,0.2)'
+                      : '1px solid #ccc',
+                    left: '0px',
                   }}
                 >
                   {menu.submenu.map((subItem, idx) => {
@@ -542,7 +592,11 @@ export default function Dashboard() {
                             handleSubmenuItemClick(subItem);
                           }
                         }}
-                        title={disabled ? 'Disabled because you are using a Ledger wallet.' : ''}
+                        title={
+                          disabled
+                            ? 'Disabled because you are using a Ledger wallet.'
+                            : ''
+                        }
                       >
                         <div>{subItem.label}</div>
                         {subItem.hasSubmenu && showSubSubmenu && (
@@ -551,15 +605,22 @@ export default function Dashboard() {
                               ...styles.subDropdownMenu,
                               backgroundColor: theme.menubarBg,
                               color: theme.color,
-                              border: isDark ? '1px solid rgba(255,255,255,0.2)' : '1px solid #ccc',
+                              border: isDark
+                                ? '1px solid rgba(255,255,255,0.2)'
+                                : '1px solid #ccc',
                               top: '0',
                               left: '100%',
                             }}
                           >
                             {subItem.items.map((recentItem, rIdx) => {
-                              const isSubSubHovered = hoveredSubSubItem === recentItem.label;
-                              const subSubBg = isSubSubHovered ? hoverColor : 'transparent';
-                              const subSubClr = isSubSubHovered ? '#fff' : theme.color;
+                              const isSubSubHovered =
+                                hoveredSubSubItem === recentItem.label;
+                              const subSubBg = isSubSubHovered
+                                ? hoverColor
+                                : 'transparent';
+                              const subSubClr = isSubSubHovered
+                                ? '#fff'
+                                : theme.color;
                               return (
                                 <div
                                   key={rIdx}
@@ -568,11 +629,15 @@ export default function Dashboard() {
                                     backgroundColor: subSubBg,
                                     color: subSubClr,
                                     display: 'flex',
-                                    alignItems: 'center',
                                     justifyContent: 'space-between',
+                                    width: '220px',
                                   }}
-                                  onMouseEnter={() => setHoveredSubSubItem(recentItem.label)}
-                                  onMouseLeave={() => setHoveredSubSubItem(null)}
+                                  onMouseEnter={() =>
+                                    setHoveredSubSubItem(recentItem.label)
+                                  }
+                                  onMouseLeave={() =>
+                                    setHoveredSubSubItem(null)
+                                  }
                                   onClick={(ev) => {
                                     ev.stopPropagation();
                                     if (recentItem.onClick) {
@@ -582,13 +647,23 @@ export default function Dashboard() {
                                     setOpenMenu(null);
                                   }}
                                 >
-                                  <div style={{ marginRight: '0.5rem' }}>{recentItem.label}</div>
+                                  <div
+                                    style={{
+                                      overflow: 'hidden',
+                                      textOverflow: 'ellipsis',
+                                      whiteSpace: 'nowrap',
+                                      maxWidth: '170px',
+                                    }}
+                                  >
+                                    {recentItem.label}
+                                  </div>
                                   <div
                                     style={{
                                       cursor: 'pointer',
                                       fontSize: '0.9rem',
                                       color: subSubClr,
                                       opacity: 0.8,
+                                      marginLeft: '0.5rem',
                                     }}
                                     onClick={(e) => {
                                       e.stopPropagation();
@@ -613,11 +688,16 @@ export default function Dashboard() {
           );
         })}
       </div>
+
       <div style={{ ...styles.tabsBar, marginTop: '2px' }}>
         {tabs.map((tab, i) => {
           const isActive = tab.key === activeTab;
           const isHovered = hoveredTab === tab.key;
-          const lineColor = isActive ? tabUnderlineColor : isHovered ? tabUnderlineHoverColor : 'transparent';
+          const lineColor = isActive
+            ? tabUnderlineColor
+            : isHovered
+            ? tabUnderlineHoverColor
+            : 'transparent';
           return (
             <div
               key={tab.key}
@@ -636,37 +716,43 @@ export default function Dashboard() {
                 paddingBottom: '0px',
               }}
             >
-              <img src={tab.icon} alt={tab.label} style={{ width: 14, height: 14, marginRight: 4 }} />
+              <img
+                src={tab.icon}
+                alt={tab.label}
+                style={{ width: 14, height: 14, marginRight: 1 }}
+              />
               {tab.label}
               <div
                 style={{
                   position: 'absolute',
-                  left: 0,
+                  left: -1,
                   bottom: '-3px',
-                  width: '101%',
+                  width: '102%',
                   height: '3.5px',
                   backgroundColor: lineColor,
-                  transition: 'background-color 0.2s ease',
+                  transition: 'background-color 0.1s ease',
                 }}
               />
             </div>
           );
         })}
       </div>
+
       <div
         style={{
           ...styles.mainContent,
+          backgroundColor: 'transparent',
           border: isDark ? '1px solid rgb(69,83,100)' : '1px solid #ccc',
           borderRadius: '6px',
-          backgroundColor: isDark ? 'rgba(60,70,80,0%)' : '#f3f3f3',
           position: 'relative',
         }}
+        className="customScroll"
       >
-        <div style={styles.backgroundImage}>
-          <img src="/images/dogebackground.png" alt="Doge background" style={styles.bgImage} />
-        </div>
+        <div style={styles.backgroundImage} />
+
         <div style={styles.panelWrapper}>{renderActiveTab()}</div>
       </div>
+
       <div
         style={{
           ...styles.statusBar,
@@ -678,7 +764,11 @@ export default function Dashboard() {
         <div
           style={{
             ...styles.statusBarLeft,
-            backgroundColor: hoverBalance ? (isDark ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.15)') : 'transparent',
+            backgroundColor: hoverBalance
+              ? isDark
+                ? 'rgba(255,255,255,0.15)'
+                : 'rgba(0,0,0,0.15)'
+              : 'transparent',
             borderRadius: 4,
             padding: '4px 8px',
             cursor: 'default',
@@ -686,56 +776,94 @@ export default function Dashboard() {
           onMouseEnter={() => setHoverBalance(true)}
           onMouseLeave={() => setHoverBalance(false)}
         >
-          Balance: {dashboardBalanceDoge.toFixed(4)} DOGE ({totalFiat.toFixed(2)} {fiatCurrency}) 1 DOGE ~{dogePriceFiat.toFixed(2)} {fiatCurrency}
+          Balance: {dashboardBalanceDoge.toFixed(4)} DOGE ({totalFiat.toFixed(2)}{' '}
+          {fiatCurrency}) 1 DOGE ~{dogePriceFiat.toFixed(2)} {fiatCurrency}
         </div>
         <div style={styles.statusBarRight}>
           <div
             style={{
               ...styles.iconContainer,
-              backgroundColor: hoverLock ? (isDark ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.15)') : 'transparent',
+              backgroundColor: hoverLock
+                ? isDark
+                  ? 'rgba(255,255,255,0.15)'
+                  : 'rgba(0,0,0,0.15)'
+                : 'transparent',
               opacity: isLedgerWallet ? 0.5 : 1,
               cursor: isLedgerWallet ? 'not-allowed' : 'pointer',
             }}
-            title={isLedgerWallet ? 'Disabled because you are using a Ledger wallet.' : 'Lock wallet'}
+            title={
+              isLedgerWallet
+                ? 'Disabled because you are using a Ledger wallet.'
+                : 'Lock wallet'
+            }
             onMouseEnter={() => setHoverLock(true)}
             onMouseLeave={() => setHoverLock(false)}
             onClick={() => {
               if (!isLedgerWallet) lockWallet();
             }}
           >
-            <img src="/images/lock.png" alt="Lock" style={styles.iconImage} />
+            <img
+              src="./images/lock.png"
+              alt="Lock"
+              style={styles.iconImage}
+            />
           </div>
           <div
             style={{
               ...styles.iconContainer,
-              backgroundColor: hoverSettings ? (isDark ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.15)') : 'transparent',
+              backgroundColor: hoverSettings
+                ? isDark
+                  ? 'rgba(255,255,255,0.15)'
+                  : 'rgba(0,0,0,0.15)'
+                : 'transparent',
             }}
             onMouseEnter={() => setHoverSettings(true)}
             onMouseLeave={() => setHoverSettings(false)}
             onClick={handleSettingsClick}
           >
-            <img src="/images/settings.png" alt="Settings" title="Open Settings" style={styles.iconImage} />
+            <img
+              src="./images/settings.png"
+              alt="Settings"
+              title="Open Settings"
+              style={styles.iconImage}
+            />
           </div>
           <div
             style={{
               ...styles.iconContainer,
-              backgroundColor: hoverSeed ? (isDark ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.15)') : 'transparent',
+              backgroundColor: hoverSeed
+                ? isDark
+                  ? 'rgba(255,255,255,0.15)'
+                  : 'rgba(0,0,0,0.15)'
+                : 'transparent',
               opacity: isLedgerWallet ? 0.5 : 1,
               cursor: isLedgerWallet ? 'not-allowed' : 'pointer',
             }}
-            title={isLedgerWallet ? 'Disabled because you are using a Ledger wallet.' : 'Show seed phrase'}
+            title={
+              isLedgerWallet
+                ? 'Disabled because you are using a Ledger wallet.'
+                : 'Show seed phrase'
+            }
             onMouseEnter={() => setHoverSeed(true)}
             onMouseLeave={() => setHoverSeed(false)}
             onClick={() => {
               if (!isLedgerWallet) setShowSeedModal(true);
             }}
           >
-            <img src="/images/showseed.png" alt="Show Seed" style={styles.iconImage} />
+            <img
+              src="./images/showseed.png"
+              alt="Show Seed"
+              style={styles.iconImage}
+            />
           </div>
           <div
             style={{
               ...styles.iconContainer,
-              backgroundColor: hoverOffline ? (isDark ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.15)') : 'transparent',
+              backgroundColor: hoverOffline
+                ? isDark
+                  ? 'rgba(255,255,255,0.15)'
+                  : 'rgba(0,0,0,0.15)'
+                : 'transparent',
               marginLeft: '0.1rem',
               display: 'flex',
               alignItems: 'center',
@@ -748,17 +876,37 @@ export default function Dashboard() {
           </div>
         </div>
       </div>
+
       {locked && !isLedgerWallet && (
         <LockModal onUnlock={unlockWallet} theme={theme} />
       )}
       {showSeedModal && !isLedgerWallet && (
-        <ShowSeedModal onClose={() => setShowSeedModal(false)} wallet={wallet} locked={locked} unlockWallet={unlockWallet} theme={theme} />
+        <ShowSeedModal
+          onClose={() => setShowSeedModal(false)}
+          wallet={wallet}
+          locked={locked}
+          unlockWallet={unlockWallet}
+          theme={theme}
+        />
       )}
       {showDeleteModal && (
-        <DeleteWalletModal onClose={() => { setShowDeleteModal(false); setDeleteFilePath(''); }} onConfirm={confirmDeleteWallet} walletPath={deleteFilePath} theme={theme} />
+        <DeleteWalletModal
+          onClose={() => {
+            setShowDeleteModal(false);
+            setDeleteFilePath('');
+          }}
+          onConfirm={confirmDeleteWallet}
+          walletPath={deleteFilePath}
+          theme={theme}
+        />
       )}
       {decryptModalData && (
-        <DecryptWalletModal onClose={() => setDecryptModalData(null)} encryptedData={decryptModalData.encryptedData} theme={theme} onDecrypted={handleDecryptedWallet} />
+        <DecryptWalletModal
+          onClose={() => setDecryptModalData(null)}
+          encryptedData={decryptModalData.encryptedData}
+          theme={theme}
+          onDecrypted={handleDecryptedWallet}
+        />
       )}
     </div>
   );
@@ -770,7 +918,6 @@ const styles = {
     flexDirection: 'column',
     width: '100%',
     height: '100vh',
-    overflow: 'hidden',
   },
   topMenuBar: {
     display: 'flex',
@@ -830,30 +977,31 @@ const styles = {
   },
   mainContent: {
     flex: 1,
-    position: 'relative',
-    overflowY: 'auto',
-    display: 'flex',
-    flexDirection: 'column',
+    minHeight: 0,
   },
   backgroundImage: {
     position: 'absolute',
-    top: 0,
-    left: 0,
-    width: '100%',
-    height: '100%',
-    zIndex: -1,
+    width: '300px',
+    height: '300px',
+    top: '59%',
+    left: '79%',
+    transform: 'translate(-50%, -50%)',
+    zIndex: 1,
     pointerEvents: 'none',
-  },
-  bgImage: {
-    width: '600px',
-    height: '600px',
-    opacity: 0.1,
+    backgroundImage: "url('./images/dogebackground.png')",
+    backgroundSize: 'cover',
+    backgroundPosition: 'center',
+    backgroundRepeat: 'no-repeat',
+    filter: 'blur(0.5px) brightness(0.9)',
+    opacity: 0.2,
   },
   panelWrapper: {
-    flex: 1,
+    position: 'relative',
+    zIndex: 1,
     marginBottom: '2px',
     borderRadius: '0 0px 0px 0px',
     padding: '0.2rem 0.3rem',
+    minHeight: 0,
   },
   statusBar: {
     height: 36,
@@ -906,7 +1054,9 @@ function getModalStyles(isDark) {
     modal: {
       backgroundColor: isDark ? 'rgb(25,35,45)' : '#fff',
       color: isDark ? '#fff' : '#333',
-      border: isDark ? '1px solid rgba(255,255,255,0.2)' : '1px solid #ccc',
+      border: isDark
+        ? '1px solid rgba(255,255,255,0.2)'
+        : '1px solid #ccc',
       borderRadius: 6,
       width: 420,
       maxWidth: '90%',
@@ -942,7 +1092,9 @@ function getModalStyles(isDark) {
       lineHeight: 1.3,
     },
     input: {
-      border: isDark ? '1px solid rgba(255,255,255,0.2)' : '1px solid #ccc',
+      border: isDark
+        ? '1px solid rgba(255,255,255,0.2)'
+        : '1px solid #ccc',
       borderRadius: 4,
       padding: '0.4rem 0.5rem',
       backgroundColor: isDark ? 'rgb(40,50,60)' : '#fff',
@@ -963,7 +1115,9 @@ function getModalStyles(isDark) {
     },
     outlineBtn: {
       padding: '0.3rem 0.7rem',
-      border: isDark ? '1px solid rgba(255,255,255,0.2)' : '1px solid #999',
+      border: isDark
+        ? '1px solid rgba(255,255,255,0.2)'
+        : '1px solid #999',
       borderRadius: 4,
       background: 'none',
       color: isDark ? '#fff' : '#333',
@@ -981,7 +1135,9 @@ function getModalStyles(isDark) {
       gap: '0.5rem',
     },
     seedBox: {
-      border: isDark ? '1px solid rgba(255,255,255,0.2)' : '1px solid #ccc',
+      border: isDark
+        ? '1px solid rgba(255,255,255,0.2)'
+        : '1px solid #ccc',
       borderRadius: 4,
       padding: '0.6rem',
       backgroundColor: isDark ? 'rgb(40,50,60)' : '#fafafa',
