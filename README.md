@@ -1,7 +1,7 @@
 # Electrum Doge Wallet 🐕🚀
 
-[![GitHub release (latest by date)](https://img.shields.io/github/v/release/brdev/ElectrumDogeWallet?color=green)](https://github.com/brdev/ElectrumDogeWallet/releases)
-[![GitHub issues](https://img.shields.io/github/issues/brdev/ElectrumDogeWallet)](https://github.com/brdev/ElectrumDogeWallet/issues)
+[![GitHub release (latest by date)](https://img.shields.io/github/v/release/brdev/ElectrumDogeWallet?color=green)](https://github.com/brdev/ElectrumDogeWallet/releases)  
+[![GitHub issues](https://img.shields.io/github/issues/brdev/ElectrumDogeWallet)](https://github.com/brdev/ElectrumDogeWallet/issues)  
 [![GitHub stars](https://img.shields.io/github/stars/brdev/ElectrumDogeWallet?style=social)](https://github.com/brdev/ElectrumDogeWallet/stargazers)
 
 **Developer:** [brdev](https://github.com/brdev)  
@@ -47,30 +47,33 @@ It supports wallets generated via BIP39/BIP32 (e.g., 12-word seed phrases), part
 
 Alternatively, clone the repository directly:
 
-git clone https://github.com/brdev/ElectrumDogeWallet.git
+    git clone https://github.com/brdev/ElectrumDogeWallet.git
 
-Below is the rest of the README (in plain text, not code):
+---
 
 ## 🛠 Installation & Usage
 
 1. **Install dependencies (root folder):**  
-   npm install
+    npm install
 
 2. **Start the React frontend:**  
-   npm run start  
-   (Runs on http://localhost:3000)
+    npm run start
+
+   Runs on [http://localhost:3000](http://localhost:3000)
 
 3. **(Optional) Start the Node.js backend:**  
-   cd src-back  
-   npm install  
-   npm start  
-   (Typically runs on http://localhost:3001)
+
+    cd src-back
+    npm install
+    npm start
+
+   Typically runs on [http://localhost:3001](http://localhost:3001)
 
 ### Building the Electron App
 
 To build a desktop application using Electron:
 
-npm run electron:build
+    npm run electron:build
 
 The bundled application will appear in the `dist/` folder (or equivalent).
 
