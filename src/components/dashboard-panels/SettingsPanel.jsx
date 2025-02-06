@@ -1,7 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useWallet } from '../../context/WalletContext';
 import { useThemeContext } from '../../context/ThemeContext';
-import { getElectrumServersFromMonitorPage } from '../../services/apiService';
+import {
+  getElectrumServersFromMonitorPage,
+  forceElectrumReconnect
+} from '../../services/apiService';
 
 export default function SettingsPanel() {
   const {
@@ -25,11 +28,9 @@ export default function SettingsPanel() {
     setAutoLockTimeout,
     explorerURL,
     setExplorerURL,
-    blockPollingInterval,
-    setBlockPollingInterval,
-    txPollingInterval,
-    setTxPollingInterval,
     isLedgerWallet,
+    autoConnectElectrum,
+    autoConnectIfNeeded
   } = useWallet();
 
   const { theme, setTheme } = useThemeContext();
@@ -72,7 +73,6 @@ export default function SettingsPanel() {
       setMonitorServers(list);
       setServerMsg(`Found ${list.length} servers.`);
     } catch (err) {
-      console.error('Re-scan error:', err);
       setServerError('Failed to load server list from monitor.');
       setServerMsg('');
     }
@@ -84,7 +84,15 @@ export default function SettingsPanel() {
     return { label, value: val };
   });
 
-  function handleServerChange(e) {
+  let finalServers = [...dynamicServers];
+  if (finalServers.length === 0 && serverParam && serverParam.host) {
+    const sslFlag = serverParam.ssl ? 'ssl' : 'tcp';
+    const label = `${serverParam.host}:${serverParam.port} (${sslFlag})`;
+    const val = `electrum|${serverParam.host}|${serverParam.port}|${sslFlag}`;
+    finalServers.push({ label, value: val });
+  }
+
+  async function handleServerChange(e) {
     const val = e.target.value;
     setLocalServer(val);
     const parts = val.split('|');
@@ -95,59 +103,32 @@ export default function SettingsPanel() {
       type: 'electrum',
       host: newHost,
       port: newPort,
-      ssl: newSsl,
+      ssl: newSsl
     });
+    try {
+      await forceElectrumReconnect();
+      await autoConnectIfNeeded();
+      setServerMsg('Server changed and reconnected.');
+    } catch (err) {
+      console.error('handleServerChange error:', err);
+      setServerError('Failed to force reconnect.');
+    }
   }
 
   const [fiatMsg, setFiatMsg] = useState('');
   const [fiatError, setFiatError] = useState('');
-
   useEffect(() => {
     if (fiatMsg) {
       const t = setTimeout(() => setFiatMsg(''), 3000);
       return () => clearTimeout(t);
     }
   }, [fiatMsg]);
-
   useEffect(() => {
     if (fiatError) {
       const t = setTimeout(() => setFiatError(''), 3000);
       return () => clearTimeout(t);
     }
   }, [fiatError]);
-
-  const fiatOptions = [
-    { code: 'USD', name: 'US Dollar' },
-    { code: 'EUR', name: 'Euro' },
-    { code: 'GBP', name: 'British Pound' },
-    { code: 'JPY', name: 'Japanese Yen' },
-    { code: 'AUD', name: 'Australian Dollar' },
-    { code: 'CAD', name: 'Canadian Dollar' },
-    { code: 'CHF', name: 'Swiss Franc' },
-    { code: 'CNY', name: 'Chinese Yuan' },
-    { code: 'HKD', name: 'Hong Kong Dollar' },
-    { code: 'NZD', name: 'New Zealand Dollar' },
-    { code: 'RUB', name: 'Russian Ruble' },
-    { code: 'BRL', name: 'Brazilian Real' },
-    { code: 'INR', name: 'Indian Rupee' },
-    { code: 'KRW', name: 'South Korean Won' },
-    { code: 'MXN', name: 'Mexican Peso' },
-    { code: 'ZAR', name: 'South African Rand' },
-    { code: 'TRY', name: 'Turkish Lira' },
-    { code: 'PLN', name: 'Polish Zloty' },
-    { code: 'SEK', name: 'Swedish Krona' },
-    { code: 'NOK', name: 'Norwegian Krone' },
-    { code: 'DKK', name: 'Danish Krone' },
-    { code: 'CZK', name: 'Czech Koruna' },
-    { code: 'HUF', name: 'Hungarian Forint' },
-    { code: 'RON', name: 'Romanian Leu' },
-    { code: 'SGD', name: 'Singapore Dollar' },
-    { code: 'THB', name: 'Thai Baht' },
-    { code: 'IDR', name: 'Indonesian Rupiah' },
-    { code: 'MYR', name: 'Malaysian Ringgit' },
-    { code: 'PHP', name: 'Philippine Peso' },
-    { code: 'VND', name: 'Vietnamese Dong' },
-  ];
 
   function handleFiatChange(e) {
     const newFiat = e.target.value;
@@ -160,14 +141,12 @@ export default function SettingsPanel() {
   const [newPwd, setNewPwd] = useState('');
   const [pwdError, setPwdError] = useState('');
   const [pwdMsg, setPwdMsg] = useState('');
-
   useEffect(() => {
     if (pwdMsg) {
       const t = setTimeout(() => setPwdMsg(''), 3000);
       return () => clearTimeout(t);
     }
   }, [pwdMsg]);
-
   useEffect(() => {
     if (pwdError) {
       const t = setTimeout(() => setPwdError(''), 3000);
@@ -210,14 +189,12 @@ export default function SettingsPanel() {
   const [cameraList, setCameraList] = useState([]);
   const [cameraError, setCameraError] = useState('');
   const [cameraMsg, setCameraMsg] = useState('');
-
   useEffect(() => {
     if (cameraMsg) {
       const t = setTimeout(() => setCameraMsg(''), 3000);
       return () => clearTimeout(t);
     }
   }, [cameraMsg]);
-
   useEffect(() => {
     if (cameraError) {
       const t = setTimeout(() => setCameraError(''), 3000);
@@ -234,7 +211,6 @@ export default function SettingsPanel() {
       setCameraList(videos);
       setCameraMsg(`Found ${videos.length} cameras.`);
     } catch (err) {
-      console.error('Scan camera error:', err);
       setCameraError('Failed to enumerate cameras.');
       setCameraMsg('');
     }
@@ -247,14 +223,12 @@ export default function SettingsPanel() {
 
   const [secMsg, setSecMsg] = useState('');
   const [secError, setSecError] = useState('');
-
   useEffect(() => {
     if (secMsg) {
       const t = setTimeout(() => setSecMsg(''), 3000);
       return () => clearTimeout(t);
     }
   }, [secMsg]);
-
   useEffect(() => {
     if (secError) {
       const t = setTimeout(() => setSecError(''), 3000);
@@ -281,14 +255,12 @@ export default function SettingsPanel() {
 
   const [explorerMsg, setExplorerMsg] = useState('');
   const [explorerError, setExplorerError] = useState('');
-
   useEffect(() => {
     if (explorerMsg) {
       const t = setTimeout(() => setExplorerMsg(''), 3000);
       return () => clearTimeout(t);
     }
   }, [explorerMsg]);
-
   useEffect(() => {
     if (explorerError) {
       const t = setTimeout(() => setExplorerError(''), 3000);
@@ -306,41 +278,31 @@ export default function SettingsPanel() {
     setExplorerMsg('Explorer URL updated.');
   }
 
-  const [pollMsg, setPollMsg] = useState('');
-  const [pollError, setPollError] = useState('');
-
+  const [forceMsg, setForceMsg] = useState('');
+  const [forceError, setForceError] = useState('');
   useEffect(() => {
-    if (pollMsg) {
-      const t = setTimeout(() => setPollMsg(''), 3000);
+    if (forceMsg) {
+      const t = setTimeout(() => setForceMsg(''), 3000);
       return () => clearTimeout(t);
     }
-  }, [pollMsg]);
-
+  }, [forceMsg]);
   useEffect(() => {
-    if (pollError) {
-      const t = setTimeout(() => setPollError(''), 3000);
+    if (forceError) {
+      const t = setTimeout(() => setForceError(''), 3000);
       return () => clearTimeout(t);
     }
-  }, [pollError]);
+  }, [forceError]);
 
-  function handleBlockPollingChange(e) {
-    const val = parseInt(e.target.value, 10);
-    if (isNaN(val) || val <= 0) {
-      setPollError('Block polling interval must be a positive number.');
-      return;
+  async function handleForceReconnect() {
+    setForceMsg('');
+    setForceError('');
+    try {
+      await forceElectrumReconnect();
+      await autoConnectIfNeeded();
+      setForceMsg('Force reconnect done. SSE should re-subscribe automatically.');
+    } catch (err) {
+      setForceError('Force reconnect failed.');
     }
-    setBlockPollingInterval(val);
-    setPollMsg(`Block polling interval set to ${val} ms.`);
-  }
-
-  function handleTxPollingChange(e) {
-    const val = parseInt(e.target.value, 10);
-    if (isNaN(val) || val <= 0) {
-      setPollError('TX polling interval must be a positive number.');
-      return;
-    }
-    setTxPollingInterval(val);
-    setPollMsg(`TX polling interval set to ${val} ms.`);
   }
 
   return (
@@ -360,19 +322,34 @@ export default function SettingsPanel() {
           background-color: rgb(69,83,100);
           border-radius: 0;
         }
+
+        .settingsSelect {
+          background-color: transparent !important;
+          appearance: none;
+          -webkit-appearance: none;
+        }
+        .settingsSelect option {
+          background-color: ${theme.inputBg || '#fff'} !important;
+          color: ${theme.color || '#333'} !important;
+        }
       `}</style>
       <div className="customScroll" style={s.scrollArea}>
         <div style={s.card}>
           <h3 style={s.cardTitle}>Server Settings</h3>
           {serverError && <div style={s.errorMsg}>{serverError}</div>}
           {serverMsg && <div style={s.successMsg}>{serverMsg}</div>}
+          {forceError && <div style={s.errorMsg}>{forceError}</div>}
+          {forceMsg && <div style={s.successMsg}>{forceMsg}</div>}
           <div style={s.formRow}>
             <label style={s.label}>Active Server:</label>
-            <select style={s.input} value={localServer} onChange={handleServerChange}>
-              {dynamicServers.length === 0 && (
-                <option value="">No servers found yet</option>
-              )}
-              {dynamicServers.map((srv, idx) => (
+            <select
+              className="settingsSelect"
+              style={s.input}
+              value={localServer}
+              onChange={handleServerChange}
+            >
+              {finalServers.length === 0 && <option value="">No servers found yet</option>}
+              {finalServers.map((srv, idx) => (
                 <option key={idx} value={srv.value}>
                   {srv.label}
                 </option>
@@ -383,6 +360,9 @@ export default function SettingsPanel() {
             <label style={s.label} />
             <button style={s.outlineBtn} onClick={handleRescan}>
               Re-Scan
+            </button>
+            <button style={{ ...s.outlineBtn, marginLeft: '0.5rem' }} onClick={handleForceReconnect}>
+              Force Reconnect
             </button>
           </div>
           <div style={s.formRow}>
@@ -398,10 +378,9 @@ export default function SettingsPanel() {
             </span>
           </div>
           <div style={s.infoText}>
-            Current server:{" "}
-            {serverParam.host
+            Current server: {serverParam.host
               ? `${serverParam.host}:${serverParam.port} (ssl=${String(serverParam.ssl)})`
-              : "No host selected"}
+              : 'No host selected'}
           </div>
         </div>
         <div style={s.card}>
@@ -410,11 +389,16 @@ export default function SettingsPanel() {
           {fiatMsg && <div style={s.successMsg}>{fiatMsg}</div>}
           <div style={s.formRow}>
             <label style={s.label}>Select fiat:</label>
-            <select style={s.input} value={fiatCurrency} onChange={handleFiatChange}>
-              {fiatOptions.map((opt) => (
-                <option key={opt.code} value={opt.code}>
-                  {opt.code} - {opt.name}
-                </option>
+            <select
+              className="settingsSelect"
+              style={s.input}
+              value={fiatCurrency}
+              onChange={handleFiatChange}
+            >
+              {[
+                'USD','EUR','VND','AED','AFN','ALL','AMD','ANG','AOA','ARS','AUD','AZN','BAM','BDT','BGN','BHD','BIF','BND','BOB','BRL','BWP','BYN','CAD','CDF','CHF','CLP','CNY','COP','CRC','CZK','DKK','DOP','DZD','EGP','GBP','GEL','GHS','HKD','HRK','HUF','IDR','ILS','INR','IQD','IRR','ISK','JMD','JOD','JPY','KES','KGS','KHR','KRW','KWD','KZT','LAK','LBP','LKR','MAD','MDL','MGA','MKD','MMK','MNT','MUR','MXN','MYR','NAD','NGN','NOK','NPR','NZD','OMR','PEN','PHP','PKR','PLN','QAR','RON','RSD','RUB','RWF','SAR','SEK','SGD','THB','TND','TRY','TWD','TZS','UAH','UGX','UYU','UZS','ZAR','ZMW'
+              ].map((code) => (
+                <option key={code} value={code}>{code}</option>
               ))}
             </select>
           </div>
@@ -434,10 +418,10 @@ export default function SettingsPanel() {
               onChange={(e) => setOldPwd(e.target.value)}
               style={{
                 ...s.input,
-                ...(isLedgerWallet && disabledStyle),
+                ...(isLedgerWallet ? disabledStyle : {})
               }}
               disabled={isLedgerWallet}
-              title={isLedgerWallet ? "Disabled because you are using a Ledger wallet." : ""}
+              title={isLedgerWallet ? 'Disabled because you are using a Ledger wallet.' : ''}
             />
           </div>
           <div style={s.formRowSmallGap}>
@@ -448,10 +432,10 @@ export default function SettingsPanel() {
               onChange={(e) => setNewPwd(e.target.value)}
               style={{
                 ...s.input,
-                ...(isLedgerWallet && disabledStyle),
+                ...(isLedgerWallet ? disabledStyle : {})
               }}
               disabled={isLedgerWallet}
-              title={isLedgerWallet ? "Disabled because you are using a Ledger wallet." : ""}
+              title={isLedgerWallet ? 'Disabled because you are using a Ledger wallet.' : ''}
             />
           </div>
           <div style={s.formRow}>
@@ -459,10 +443,10 @@ export default function SettingsPanel() {
             <button
               style={{
                 ...s.outlineBtn,
-                ...(isLedgerWallet && disabledStyle),
+                ...(isLedgerWallet ? disabledStyle : {})
               }}
               disabled={isLedgerWallet}
-              title={isLedgerWallet ? "Disabled because you are using a Ledger wallet." : ""}
+              title={isLedgerWallet ? 'Disabled because you are using a Ledger wallet.' : ''}
               onClick={handleChangePassword}
             >
               Update Password
@@ -473,7 +457,12 @@ export default function SettingsPanel() {
           <h3 style={s.cardTitle}>Theme Settings</h3>
           <div style={s.formRow}>
             <label style={s.label}>Select Theme:</label>
-            <select style={s.input} value={theme.name} onChange={handleThemeChange}>
+            <select
+              className="settingsSelect"
+              style={s.input}
+              value={theme.name}
+              onChange={handleThemeChange}
+            >
               <option value="light">Light</option>
               <option value="dark">Dark</option>
             </select>
@@ -488,7 +477,12 @@ export default function SettingsPanel() {
           {cameraMsg && <div style={s.successMsg}>{cameraMsg}</div>}
           <div style={s.formRow}>
             <label style={s.label}>Active Camera:</label>
-            <select style={s.input} value={cameraDeviceId || ''} onChange={handleCameraChange}>
+            <select
+              className="settingsSelect"
+              style={s.input}
+              value={cameraDeviceId || ''}
+              onChange={handleCameraChange}
+            >
               <option value="">No camera</option>
               {cameraList.map((cam, idx) => (
                 <option key={cam.deviceId} value={cam.deviceId}>
@@ -509,8 +503,6 @@ export default function SettingsPanel() {
         </div>
         <div style={s.card}>
           <h3 style={s.cardTitle}>Security Settings</h3>
-          {secError && <div style={s.errorMsg}>{secError}</div>}
-          {secMsg && <div style={s.successMsg}>{secMsg}</div>}
           <div style={s.formRow}>
             <label style={s.label}>Auto-Lock:</label>
             <input
@@ -519,7 +511,7 @@ export default function SettingsPanel() {
               onChange={handleAutoLockEnabledChange}
               style={{ transform: 'scale(1.2)' }}
               disabled={isLedgerWallet}
-              title={isLedgerWallet ? "Disabled because you are using a Ledger wallet." : ""}
+              title={isLedgerWallet ? 'Disabled because you are using a Ledger wallet.' : ''}
             />
             <span style={{ marginLeft: '0.5rem', fontSize: '0.85rem' }}>
               Lock wallet after inactivity
@@ -533,10 +525,10 @@ export default function SettingsPanel() {
               onChange={handleAutoLockTimeoutChange}
               style={{
                 ...s.input,
-                ...(isLedgerWallet && disabledStyle),
+                ...(isLedgerWallet ? disabledStyle : {})
               }}
               disabled={isLedgerWallet}
-              title={isLedgerWallet ? "Disabled because you are using a Ledger wallet." : ""}
+              title={isLedgerWallet ? 'Disabled because you are using a Ledger wallet.' : ''}
             />
           </div>
         </div>
@@ -557,29 +549,6 @@ export default function SettingsPanel() {
             Current explorer: <b>{explorerURL}</b>
           </div>
         </div>
-        <div style={s.card}>
-          <h3 style={s.cardTitle}>Polling Settings</h3>
-          {pollError && <div style={s.errorMsg}>{pollError}</div>}
-          {pollMsg && <div style={s.successMsg}>{pollMsg}</div>}
-          <div style={s.formRow}>
-            <label style={s.label}>Block Polling (ms):</label>
-            <input
-              type="number"
-              value={blockPollingInterval}
-              onChange={handleBlockPollingChange}
-              style={s.input}
-            />
-          </div>
-          <div style={s.formRow}>
-            <label style={s.label}>TX Polling (ms):</label>
-            <input
-              type="number"
-              value={txPollingInterval}
-              onChange={handleTxPollingChange}
-              style={s.input}
-            />
-          </div>
-        </div>
       </div>
     </div>
   );
@@ -587,7 +556,7 @@ export default function SettingsPanel() {
 
 const disabledStyle = {
   opacity: 0.5,
-  cursor: 'not-allowed',
+  cursor: 'not-allowed'
 };
 
 function getStyles(theme) {
@@ -595,12 +564,9 @@ function getStyles(theme) {
   return {
     wrapper: {
       width: '100%',
-      height: '100%',
-      display: 'flex',
-      flexDirection: 'column',
-      position: 'relative',
-      color: theme.color,
-      backgroundColor: theme.background,
+      boxSizing: 'border-box',
+      padding: '1rem',
+      backgroundColor: 'transparent' 
     },
     scrollArea: {
       width: '100%',
@@ -610,7 +576,7 @@ function getStyles(theme) {
       flexDirection: 'column',
       gap: '0.8rem',
       padding: '0.8rem',
-      boxSizing: 'border-box',
+      boxSizing: 'border-box'
     },
     card: {
       backgroundColor: 'transparent',
@@ -622,30 +588,30 @@ function getStyles(theme) {
       flexDirection: 'column',
       gap: '0.5rem',
       borderBottom: `1px solid ${dividerColor}`,
-      marginBottom: '0.5rem',
+      marginBottom: '0.5rem'
     },
     cardTitle: {
       margin: 0,
-      fontSize: '1rem',
+      fontSize: '1rem'
     },
     formRow: {
       display: 'flex',
       alignItems: 'center',
       gap: '0.5rem',
-      marginBottom: '0.5rem',
+      marginBottom: '0.5rem'
     },
     formRowSmallGap: {
       display: 'flex',
       alignItems: 'center',
       gap: '0.5rem',
-      marginBottom: '0.3rem',
+      marginBottom: '0.3rem'
     },
     label: {
       width: '120px',
       textAlign: 'right',
       fontWeight: 'bold',
       fontSize: '0.85rem',
-      flexShrink: 0,
+      flexShrink: 0
     },
     input: {
       flex: 1,
@@ -654,10 +620,10 @@ function getStyles(theme) {
       fontSize: '0.85rem',
       borderRadius: '4px',
       border: `1px solid ${dividerColor}`,
-      backgroundColor: theme.inputBg || 'transparent',
+      backgroundColor: 'transparent',
       color: theme.color || '#333',
       outline: 'none',
-      boxSizing: 'border-box',
+      boxSizing: 'border-box'
     },
     outlineBtn: {
       height: 22,
@@ -668,25 +634,25 @@ function getStyles(theme) {
       borderRadius: 4,
       cursor: 'pointer',
       fontSize: '0.8rem',
-      fontWeight: 'normal',
+      fontWeight: 'normal'
     },
     errorMsg: {
       backgroundColor: theme.name === 'dark' ? 'rgba(180,60,60,0.2)' : '#fbdada',
       color: theme.name === 'dark' ? '#ff8080' : '#970000',
       padding: '0.4rem',
       borderRadius: '4px',
-      fontSize: '0.85rem',
+      fontSize: '0.85rem'
     },
     successMsg: {
       backgroundColor: theme.name === 'dark' ? 'rgba(60,180,60,0.2)' : '#d4f8d4',
       color: theme.name === 'dark' ? '#afffaf' : '#027a02',
       padding: '0.4rem',
       borderRadius: '4px',
-      fontSize: '0.85rem',
+      fontSize: '0.85rem'
     },
     infoText: {
       fontSize: '0.85rem',
-      color: theme.color,
-    },
+      color: theme.color
+    }
   };
 }
