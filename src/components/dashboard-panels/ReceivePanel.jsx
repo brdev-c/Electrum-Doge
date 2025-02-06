@@ -1,459 +1,407 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { QRCodeCanvas } from 'qrcode.react';
 import { useThemeContext } from '../../context/ThemeContext';
 import { useWallet } from '../../context/WalletContext';
-import {
-  getUtxosWithRawTx,
-  estimateDogeFee,
-  sendDogeTransaction
-} from '../../services/apiService';
-import {
-  createAndSignTx,
-  createUnsignedTx
-} from '../../services/walletService';
+import { buildNextOfferAddress } from '../../services/walletService';
+import { getDogeBalance } from '../../services/apiService';
 
-export default function NewTransactionModalLocal({
-  onClose,
-  recipient,
-  description,
-  amountDoge,
-  onTxSuccess,
-  isMax = false
-}) {
+export default function ReceivePanel() {
   const { theme } = useThemeContext();
-  const { wallet, serverParam } = useWallet();
-  const [feeRate, setFeeRate] = useState(200);
-  const [feeTarget, setFeeTarget] = useState(5);
-  const [manualFees, setManualFees] = useState(false);
-  const [showInputs, setShowInputs] = useState(false);
-  const [lockTimeEnabled, setLockTimeEnabled] = useState(false);
-  const [lockTimeType, setLockTimeType] = useState('blockheight');
-  const [lockTimeValue, setLockTimeValue] = useState('');
-  const [useChangeAddr, setUseChangeAddr] = useState(true);
-  const [draftInputs, setDraftInputs] = useState([]);
-  const [draftOutputs, setDraftOutputs] = useState([]);
-  const [vbytes, setVbytes] = useState(0);
-  const [feeDoge, setFeeDoge] = useState(0);
-  const [feePct, setFeePct] = useState(0);
-  const [showSettingsMenu, setShowSettingsMenu] = useState(false);
-  const [errorMsg, setErrorMsg] = useState('');
-  const [infoMsg, setInfoMsg] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [sentTxid, setSentTxid] = useState(null);
-  const [draftLoading, setDraftLoading] = useState(false);
+  const { wallet, setWallet, fiatCurrency, dogePriceFiat, serverParam } = useWallet();
   const styles = getStyles(theme);
+  const isDark = theme.darkMode || theme.name === 'dark';
+
+  const [description, setDescription] = useState('');
+  const [amountDoge, setAmountDoge] = useState('');
+  const [amountFiat, setAmountFiat] = useState('');
+  const [expiry, setExpiry] = useState('1 day');
+  const [showQr, setShowQr] = useState(false);
+  const [isDogeUri, setIsDogeUri] = useState(true);
+  const [requestText, setRequestText] = useState('');
+  const [requests, setRequests] = useState([]);
+  const walletId = wallet?.mnemonic || wallet?.address || 'temp';
+  const [tableMaxHeight, setTableMaxHeight] = useState('200px');
+  const initialWindowHeightRef = useRef(window.innerHeight);
+
   useEffect(() => {
-    handleEstimateFee(feeTarget);
-  }, []);
+    const saved = localStorage.getItem('app_receiveRequests_' + walletId);
+    if (saved) {
+      try {
+        const arr = JSON.parse(saved);
+        setRequests(arr);
+      } catch {}
+    }
+  }, [walletId]);
+
   useEffect(() => {
-    if (!isMax && !manualFees) {
-      handleEstimateFee(feeTarget);
-    }
-  }, [feeTarget]);
+    localStorage.setItem('app_receiveRequests_' + walletId, JSON.stringify(requests));
+  }, [requests, walletId]);
+
   useEffect(() => {
-    draftTxBuild();
-  }, [
-    isMax,
-    manualFees,
-    feeRate,
-    lockTimeEnabled,
-    lockTimeType,
-    lockTimeValue,
-    useChangeAddr,
-    wallet
-  ]);
-  const settingsMenuRef = useRef(null);
-  useEffect(() => {
-    function handleClickOutside(e) {
-      if (!settingsMenuRef.current) return;
-      if (!settingsMenuRef.current.contains(e.target)) {
-        setShowSettingsMenu(false);
-      }
-    }
-    if (showSettingsMenu) {
-      document.addEventListener('mousedown', handleClickOutside);
-    } else {
-      document.removeEventListener('mousedown', handleClickOutside);
-    }
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, [showSettingsMenu]);
-  async function handleEstimateFee(targetBlocks) {
-    try {
-      const feePerKb = await estimateDogeFee(targetBlocks, serverParam);
-      if (feePerKb && feePerKb > 0) {
-        let spb = Math.floor((feePerKb * 1e8) / 1000);
-        if (spb < 50) spb = 50;
-        if (spb > 100000) spb = 100000;
-        setFeeRate(spb);
-      }
-    } catch (err) {
-      setFeeRate(200);
-    }
-  }
-  async function draftTxBuild() {
-    setDraftInputs([]);
-    setDraftOutputs([]);
-    setVbytes(0);
-    setFeeDoge(0);
-    setFeePct(0);
-    setErrorMsg('');
-    setInfoMsg('');
-    if (sentTxid) return;
-    setDraftLoading(true);
-    try {
-      if (!wallet || !wallet.addresses) return;
-      const amtNum = parseFloat(amountDoge) || 0;
-      if (!recipient || amtNum <= 0) return;
-      const utxos = await getUtxosWithRawTx(
-        wallet.addresses.map(a => a.address),
-        serverParam
-      );
-      if (!utxos.length) return;
-      const recipients = [
-        {
-          address: recipient.trim(),
-          valueSat: Math.floor(amtNum * 1e8)
+    const timer = setInterval(() => {
+      checkRequestsStatus();
+    }, 10000);
+    return () => clearInterval(timer);
+  }, [requests]);
+
+  async function checkRequestsStatus() {
+    const updated = [...requests];
+    for (const req of updated) {
+      if (req.status === 'active') {
+        const elapsedMs = Date.now() - req.createdAt;
+        if (elapsedMs >= req.expirySec * 1000) {
+          req.status = 'overdue';
+          continue;
         }
-      ];
-      const lockTime = lockTimeEnabled
-        ? parseLockTime(lockTimeType, lockTimeValue)
-        : null;
-      const draft = await createUnsignedTx({
-        recipients,
-        feeRate,
-        allUtxos: utxos,
-        walletAddresses: wallet.addresses,
-        lockTime,
-        useChange: useChangeAddr
-      });
-      setDraftInputs(draft.inputs);
-      setDraftOutputs(draft.outputs);
-      setVbytes(draft.vbytes || 150);
-      const feeDOGE = (draft.feeSat || 0) / 1e8;
-      setFeeDoge(feeDOGE);
-      const amtNumDoge = parseFloat(amountDoge) || 0;
-      if (amtNumDoge > 0) {
-        const pct = (feeDOGE / amtNumDoge) * 100;
-        setFeePct(pct);
+        try {
+          const bal = await getDogeBalance(req.address, serverParam);
+          const netReceived = (bal.confirmed || 0) - (req.initialBalance || 0);
+          if (req.amountDoge > 0) {
+            if (netReceived >= req.amountDoge) {
+              req.status = 'paid';
+              req.paidAt = Date.now();
+              req.paidAmount = netReceived;
+            }
+          } else {
+            if (netReceived > 0) {
+              req.status = 'paid';
+              req.paidAt = Date.now();
+              req.paidAmount = netReceived;
+            }
+          }
+        } catch {}
       }
-    } catch (err) {
-      setErrorMsg(err.message);
-    } finally {
-      setDraftLoading(false);
     }
+    setRequests(updated);
   }
-  function parseLockTime(type, val) {
-    const num = parseInt(val, 10) || 0;
-    switch (type) {
-      case 'raw':
-      case 'blockheight':
-      case 'date':
-        return num;
-      default:
-        return 0;
+
+  async function handleCreate() {
+    try {
+      let expSec = 86400;
+      if (expiry === '3 days') expSec = 3 * 86400;
+      else if (expiry === '1 week') expSec = 7 * 86400;
+      const nextAddrInfo = buildNextOfferAddress(wallet);
+      if (!nextAddrInfo.ok) {
+        alert('Failed to create new receiving address');
+        return;
+      }
+      const dogeNum = parseFloat(amountDoge) || 0;
+      const now = Date.now();
+      const address = nextAddrInfo.address;
+      const bal = await getDogeBalance(address, serverParam);
+      const initialBal = bal.confirmed || 0;
+      const newReq = {
+        id: now.toString(),
+        address,
+        createdAt: now,
+        description: description.trim(),
+        amountDoge: dogeNum,
+        expirySec: expSec,
+        status: 'active',
+        paidAt: null,
+        paidAmount: 0,
+        initialBalance: initialBal
+      };
+      setRequests(prev => [newReq, ...prev]);
+      const dogeUri = buildDogeUri(address, dogeNum, description);
+      setRequestText(dogeUri);
+      setShowQr(true);
+      setWallet(nextAddrInfo.updatedWallet);
+    } catch (err) {}
+  }
+
+  function buildDogeUri(address, dogeAmount, desc) {
+    const labelEnc = encodeURIComponent((desc || '').trim());
+    let dogeUri = `dogecoin:${address}`;
+    if (dogeAmount > 0) {
+      dogeUri += `?amount=${dogeAmount}`;
+      if (labelEnc) {
+        dogeUri += `&label=${labelEnc}`;
+      }
+    } else if (labelEnc) {
+      dogeUri += `?label=${labelEnc}`;
     }
+    return dogeUri;
   }
-  async function handleClickOK() {
-    if (sentTxid) {
-      onClose();
+
+  function handleClear() {
+    setDescription('');
+    setAmountDoge('');
+    setAmountFiat('');
+    setRequestText('');
+    setShowQr(false);
+  }
+
+  function toggleExpiry() {
+    if (expiry === '1 day') setExpiry('3 days');
+    else if (expiry === '3 days') setExpiry('1 week');
+    else setExpiry('1 day');
+  }
+
+  function toggleUriType() {
+    setIsDogeUri(!isDogeUri);
+    setShowQr(false);
+  }
+
+  function onChangeDoge(e) {
+    const val = e.target.value;
+    setAmountDoge(val);
+    if (!val) {
+      setAmountFiat('');
       return;
     }
-    try {
-      setLoading(true);
-      setErrorMsg('');
-      setInfoMsg('');
-      if (!wallet || !wallet.addresses) {
-        throw new Error('No wallet loaded');
-      }
-      const amt = parseFloat(amountDoge) || 0;
-      if (!recipient || amt <= 0) {
-        throw new Error('Invalid transaction data. Check recipient/amount.');
-      }
-      const utxos = await getUtxosWithRawTx(
-        wallet.addresses.map(a => a.address),
-        serverParam
-      );
-      if (!utxos.length) {
-        throw new Error('No available UTXOs.');
-      }
-      const recipients = [
-        {
-          address: recipient.trim(),
-          valueSat: Math.floor(amt * 1e8)
-        }
-      ];
-      const lockTime = lockTimeEnabled
-        ? parseLockTime(lockTimeType, lockTimeValue)
-        : null;
-      const { txHex } = createAndSignTx({
-        recipients,
-        feeRate,
-        allUtxos: utxos,
-        walletAddresses: wallet.addresses,
-        lockTime,
-        useChange: useChangeAddr
-      });
-      const { txid } = await sendDogeTransaction(txHex, serverParam);
-      if (!txid) {
-        throw new Error('Broadcast failed (no txid).');
-      }
-      setSentTxid(txid);
-      setInfoMsg(`Success! TXID: ${txid}`);
-      if (onTxSuccess) {
-        onTxSuccess({ txid });
-      }
-      window.electronAPI.notifyOutgoingTransaction({
-        txid,
-        amountDoge: amt,
-        to: recipient
-      });
-    } catch (err) {
-      console.error(err);
-      setErrorMsg(err.message || 'Failed to send transaction');
-    } finally {
-      setLoading(false);
+    const dogeNum = parseFloat(val);
+    if (!isNaN(dogeNum) && dogeNum > 0 && dogePriceFiat > 0) {
+      setAmountFiat((dogeNum * dogePriceFiat).toFixed(2));
+    } else {
+      setAmountFiat('');
     }
   }
-  function handleCancel() {
-    onClose();
+
+  function onChangeFiat(e) {
+    const val = e.target.value;
+    setAmountFiat(val);
+    if (!val) {
+      setAmountDoge('');
+      return;
+    }
+    const fiatNum = parseFloat(val);
+    if (!isNaN(fiatNum) && fiatNum > 0 && dogePriceFiat > 0) {
+      setAmountDoge((fiatNum / dogePriceFiat).toFixed(4));
+    } else {
+      setAmountDoge('');
+    }
   }
-  function toggleSettingsMenu() {
-    setShowSettingsMenu(!showSettingsMenu);
+
+  const displayedText = requestText
+    ? isDogeUri
+      ? requestText
+      : requestText.replace(/^dogecoin:/, '').split('?')[0]
+    : '';
+
+  function handleQrButton() {
+    if (!requestText) return;
+    setShowQr(!showQr);
   }
-  const isFeeTooHigh = feePct > 10;
-  const canEditFee = !isMax;
+
+  function handleRequestRowClick(req) {
+    const dogeUri = buildDogeUri(req.address, req.amountDoge, req.description);
+    setRequestText(dogeUri);
+    setShowQr(false);
+  }
+
+  function renderTableRows() {
+    return requests.map(req => {
+      const dateStr = new Date(req.createdAt).toLocaleString();
+      let amtStr = '';
+      if (req.amountDoge > 0) {
+        amtStr = req.amountDoge.toFixed(6) + ' DOGE';
+      } else {
+        if (req.status === 'paid' && req.paidAmount) {
+          amtStr = req.paidAmount.toFixed(6) + ' DOGE';
+        }
+      }
+      let statusCell;
+      if (req.status === 'overdue') {
+        statusCell = (
+          <>
+            <img src="./images/icon-overdue.png" alt="overdue" style={styles.statusIcon} />
+            Overdue
+          </>
+        );
+      } else if (req.status === 'paid') {
+        statusCell = (
+          <>
+            <img src="./images/success.png" alt="paid" style={styles.statusIcon} />
+            Paid {req.paidAmount > 0 && `(${req.paidAmount.toFixed(6)} DOGE)`}
+          </>
+        );
+      } else if (req.status === 'active') {
+        const elapsedMs = Date.now() - req.createdAt;
+        const remainSec = req.expirySec - Math.floor(elapsedMs / 1000);
+        if (remainSec <= 0) {
+          statusCell = (
+            <>
+              <img src="./images/icon-overdue.png" alt="overdue" style={styles.statusIcon} />
+              Overdue
+            </>
+          );
+        } else {
+          const remainH = Math.ceil(remainSec / 3600);
+          statusCell = (
+            <>
+              <img src="./images/icon-expires.png" alt="active" style={styles.statusIcon} />
+              Expires in {remainH}h
+            </>
+          );
+        }
+      } else {
+        statusCell = (
+          <>
+            <img src="./images/icon-overdue.png" alt="?" style={styles.statusIcon} />
+            Overdue
+          </>
+        );
+      }
+      return (
+        <tr key={req.id} style={{ cursor: 'pointer' }} onClick={() => handleRequestRowClick(req)}>
+          <td style={{ ...styles.td, ...styles.tdFirstBottom }}>{dateStr}</td>
+          <td style={styles.td}>{req.description}</td>
+          <td style={styles.td}>{amtStr}</td>
+          <td style={styles.td}>{req.address}</td>
+          <td style={styles.td}>{statusCell}</td>
+        </tr>
+      );
+    });
+  }
+
+  useEffect(() => {
+    function updateTableHeight() {
+      const rowHeight = 40;
+      const minHeight = 3.3 * rowHeight;
+      const headerOffset = 250;
+      const available = window.innerHeight - headerOffset;
+      if (window.innerHeight > initialWindowHeightRef.current) {
+        setTableMaxHeight(`${available > minHeight ? available : minHeight}px`);
+      } else {
+        setTableMaxHeight(`${minHeight}px`);
+      }
+    }
+    updateTableHeight();
+    window.addEventListener('resize', updateTableHeight);
+    return () => window.removeEventListener('resize', updateTableHeight);
+  }, []);
+
   return (
-    <div style={getStyles(theme).overlay}>
-      <div style={showInputs ? getStyles(theme).modalExpanded : getStyles(theme).modal}>
-        <div style={getStyles(theme).header}>
-          <h3 style={getStyles(theme).title}>New Transaction</h3>
-          <div style={getStyles(theme).headerRight}>
-            {canEditFee && (
-              <button style={getStyles(theme).settingsBtn} onClick={toggleSettingsMenu}>
-                <img src="/images/settings.png" alt="Settings" style={{ width: 14, height: 14 }} />
-              </button>
-            )}
-            <button style={getStyles(theme).closeBtn} onClick={handleCancel}>
-              ×
+    <div style={styles.wrapper}>
+      <style>{`
+        .table-scroll {
+          overflow-y: auto;
+          scrollbar-width: thin;
+        }
+        .table-scroll::-webkit-scrollbar {
+          width: 6px;
+        }
+        .table-scroll::-webkit-scrollbar-track {
+          background: transparent;
+        }
+        .table-scroll::-webkit-scrollbar-thumb {
+          background-color: rgb(69,83,100);
+        }
+      `}</style>
+      <div style={styles.topSection}>
+        <div style={styles.formLeft}>
+          <div style={styles.formRow}>
+            <label style={styles.formLabel}>Description</label>
+            <input
+              style={styles.formInputFull}
+              type="text"
+              value={description}
+              onChange={e => setDescription(e.target.value)}
+            />
+          </div>
+          <div style={styles.formRow}>
+            <label style={styles.formLabel}>Requested amount</label>
+            <div style={styles.formInputLine}>
+              <div style={styles.suffixContainer}>
+                <input
+                  style={styles.inputWithSuffix}
+                  type="text"
+                  value={amountDoge}
+                  onChange={onChangeDoge}
+                  placeholder="0.0"
+                />
+                <div style={styles.suffixLabel}>DOGE</div>
+              </div>
+              <div style={styles.suffixContainer}>
+                <input
+                  style={styles.inputWithSuffix}
+                  type="text"
+                  value={amountFiat}
+                  onChange={onChangeFiat}
+                  placeholder={fiatCurrency}
+                />
+                <div style={styles.suffixLabel}>{fiatCurrency}</div>
+              </div>
+            </div>
+          </div>
+          <div style={styles.formRow}>
+            <label style={styles.formLabel}>Expires</label>
+            <button style={styles.expiryButton} onClick={toggleExpiry}>
+              {expiry}
+            </button>
+          </div>
+          <div style={styles.buttonRow}>
+            <button style={styles.clearBtn} onClick={handleClear}>
+              Clear
+            </button>
+            <button
+              style={styles.createBtn}
+              onClick={handleCreate}
+            >
+              Create Offer
             </button>
           </div>
         </div>
-        {canEditFee && showSettingsMenu && (
-          <div style={getStyles(theme).settingsMenu} ref={settingsMenuRef}>
-            <label style={getStyles(theme).settingsItem}>
-              <input
-                type="checkbox"
-                checked={showInputs}
-                onChange={() => setShowInputs(!showInputs)}
+        <div style={styles.formRight}>
+          <div style={styles.rightButtonsRow}>
+            <button style={styles.uriToggleBtn} onClick={toggleUriType}>
+              <img
+                src={isDogeUri ? './images/link-icon.png' : './images/dogecoin.png'}
+                alt="switch"
+                style={{ width: 16, height: 16, marginRight: 3 }}
               />
-              Show inputs and outputs
-            </label>
-            <label style={getStyles(theme).settingsItem}>
-              <input
-                type="checkbox"
-                checked={manualFees}
-                onChange={() => setManualFees(!manualFees)}
-              />
-              Edit fees manually
-            </label>
-            <label style={getStyles(theme).settingsItem}>
-              <input
-                type="checkbox"
-                checked={lockTimeEnabled}
-                onChange={() => setLockTimeEnabled(!lockTimeEnabled)}
-              />
-              Edit lockTime
-            </label>
-            <label style={getStyles(theme).settingsItem}>
-              <input
-                type="checkbox"
-                checked={useChangeAddr}
-                onChange={() => setUseChangeAddr(!useChangeAddr)}
-              />
-              Use addresses for change
-            </label>
+              {isDogeUri ? 'Doge URI' : 'Address'}
+            </button>
+            <button style={styles.uriQrBtn} onClick={handleQrButton}>
+              <img src="./images/qr-icon.png" alt="QR" style={{ width: 16, height: 16 }} />
+            </button>
           </div>
-        )}
-        {!sentTxid && (
-          <>
-            <div style={getStyles(theme).body}>
-              <div style={getStyles(theme).formRow}>
-                <label style={getStyles(theme).label}>Amount:</label>
-                <div style={getStyles(theme).valueText}>{amountDoge} DOGE</div>
+          <div style={styles.uriBorder}>
+            {requestText && !showQr && (
+              <textarea style={styles.uriTextarea} readOnly value={displayedText} />
+            )}
+            {requestText && showQr && (
+              <div style={styles.qrContainer}>
+                <QRCodeCanvas value={displayedText} size={120} includeMargin />
               </div>
-              <div style={getStyles(theme).formRow}>
-                <label style={getStyles(theme).label}>Mining Fee:</label>
-                {!manualFees && (
-                  <div style={getStyles(theme).feeLine}>
-                    <span>{feeRate} sat/byte</span>
-                    <span style={getStyles(theme).xBytes}>
-                      ≈ {feeDoge.toFixed(8)} DOGE
-                    </span>
-                  </div>
-                )}
-                {manualFees && canEditFee && (
-                  <div style={getStyles(theme).feeLine}>
-                    <input
-                      type="number"
-                      style={getStyles(theme).inputField}
-                      value={feeRate}
-                      onChange={(e) => {
-                        const val = parseInt(e.target.value || '0', 10);
-                        setFeeRate(val);
-                        draftTxBuild();
-                      }}
-                    />
-                    <span style={getStyles(theme).xBytes}>sat/byte</span>
-                    <span style={{ marginLeft: '0.6rem' }}>
-                      ~ {feeDoge.toFixed(8)} DOGE
-                    </span>
-                  </div>
-                )}
-                {manualFees && !canEditFee && (
-                  <div>
-                    <em>Fee editing disabled in MAX mode</em>
-                  </div>
-                )}
-              </div>
-              {!manualFees && canEditFee && (
-                <div style={getStyles(theme).formRow}>
-                  <label style={getStyles(theme).label}>Fee target:</label>
-                  <div style={getStyles(theme).sliderWrap}>
-                    <input
-                      type="range"
-                      min={1}
-                      max={10}
-                      step={1}
-                      value={feeTarget}
-                      onChange={(e) => {
-                        const val = Number(e.target.value);
-                        setFeeTarget(val);
-                        handleEstimateFee(val);
-                      }}
-                    />
-                    <span style={getStyles(theme).sliderText}>{feeTarget} blocks</span>
-                  </div>
-                </div>
-              )}
-              {lockTimeEnabled && canEditFee && (
-                <div style={getStyles(theme).formRow}>
-                  <label style={getStyles(theme).label}>LockTime:</label>
-                  <div style={getStyles(theme).lockTimeWrap}>
-                    <select
-                      style={getStyles(theme).selectField}
-                      value={lockTimeType}
-                      onChange={(e) => setLockTimeType(e.target.value)}
-                    >
-                      <option value="raw">Raw</option>
-                      <option value="blockheight">Block height</option>
-                      <option value="date">Date (timestamp)</option>
-                    </select>
-                    <input
-                      type="number"
-                      style={getStyles(theme).inputField}
-                      placeholder="value"
-                      value={lockTimeValue}
-                      onChange={(e) => setLockTimeValue(e.target.value)}
-                    />
-                    <span style={getStyles(theme).lockTimeSuffix}>
-                      {lockTimeType === 'blockheight' ? 'height' : ''}
-                    </span>
-                  </div>
-                </div>
-              )}
-              {isFeeTooHigh && (
-                <div style={getStyles(theme).warningLine}>
-                  This fee is unusually high: {feePct.toFixed(2)}% of amount.
-                </div>
-              )}
-              {draftLoading && (
-                <div style={getStyles(theme).loadingDraft}>
-                  <img
-                    src="/images/spinner.gif"
-                    alt="loading"
-                    style={{ width: 20, height: 20, marginRight: 8 }}
-                  />
-                  Building transaction draft...
-                </div>
-              )}
-              {!draftLoading && showInputs && (
-                <div>
-                  <div style={getStyles(theme).ioBox}>
-                    <h4 style={getStyles(theme).ioTitle}>
-                      Inputs ({draftInputs.length})
-                    </h4>
-                    {draftInputs.map((inp, idx) => (
-                      <div key={idx} style={getStyles(theme).ioRow}>
-                        <div style={getStyles(theme).ioLine}>
-                          <strong>
-                            {inp.txid}:{inp.vout}
-                          </strong>
-                          <span style={{ marginLeft: '0.5rem', opacity: 0.8 }}>
-                            {inp.address}
-                          </span>
-                          <span style={{ marginLeft: '1rem', fontWeight: 'bold' }}>
-                            {(inp.value / 1e8).toFixed(8)} DOGE
-                          </span>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                  <div style={getStyles(theme).ioBox}>
-                    <h4 style={getStyles(theme).ioTitle}>
-                      Outputs ({draftOutputs.length})
-                    </h4>
-                    {draftOutputs.map((out, idx) => {
-                      const valDoge = (out.value / 1e8).toFixed(8);
-                      return (
-                        <div key={idx} style={getStyles(theme).ioRow}>
-                          <div style={getStyles(theme).ioLine}>
-                            <span>{out.address}</span>
-                            <span style={{ marginLeft: '1rem', fontWeight: 'bold' }}>
-                              {valDoge} DOGE
-                            </span>
-                            {out.isChange && (
-                              <span style={{ marginLeft: '0.5rem', color: '#ffd700' }}>
-                                (change)
-                              </span>
-                            )}
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-              )}
-            </div>
-          </>
-        )}
-        {sentTxid && (
-          <div style={getStyles(theme).successContainer}>
-            <img
-              src="/images/success.png"
-              alt="success"
-              style={{ width: 64, height: 64, marginBottom: '0.5rem' }}
-            />
-            <h4 style={{ margin: 0 }}>Transaction sent successfully!</h4>
-            <p style={{ margin: '0.5rem 0' }}>TXID: {sentTxid}</p>
+            )}
           </div>
-        )}
-        <div style={getStyles(theme).msgArea}>
-          {errorMsg && <div style={getStyles(theme).errorBox}>{errorMsg}</div>}
-          {infoMsg && <div style={getStyles(theme).infoBox}>{infoMsg}</div>}
-          {loading && (
-            <div style={getStyles(theme).loadingBox}>
-              Sending transaction...
-            </div>
-          )}
         </div>
-        <div style={getStyles(theme).footer}>
-          <button style={getStyles(theme).cancelBtn} onClick={handleCancel} disabled={loading && !sentTxid}>
-            Cancel
-          </button>
-          <button style={getStyles(theme).okBtn} onClick={handleClickOK} disabled={loading}>
-            {sentTxid ? 'OK' : 'Send'}
-          </button>
+      </div>
+      <div style={styles.bottomSection}>
+        <h4 style={styles.tableTitle}>Requests</h4>
+        <div style={styles.tableWrapper}>
+          <table style={styles.requestsTable}>
+            <colgroup>
+              <col style={{ width: '16%' }} />
+              <col style={{ width: '23%' }} />
+              <col style={{ width: '15%' }} />
+              <col style={{ width: '25%' }} />
+              <col style={{ width: '20%' }} />
+            </colgroup>
+            <thead>
+              <tr style={styles.tableHeaderRow}>
+                <th style={styles.th}>Date</th>
+                <th style={styles.th}>Description</th>
+                <th style={styles.th}>Amount</th>
+                <th style={styles.th}>Address</th>
+                <th style={styles.th}>Status</th>
+              </tr>
+            </thead>
+          </table>
+          <div className="table-scroll" style={{ maxHeight: tableMaxHeight }}>
+            <table style={{ ...styles.requestsTable, marginTop: 0 }}>
+              <colgroup>
+                <col style={{ width: '16%' }} />
+                <col style={{ width: '23%' }} />
+                <col style={{ width: '15%' }} />
+                <col style={{ width: '25%' }} />
+                <col style={{ width: '20%' }} />
+              </colgroup>
+              <tbody>{renderTableRows()}</tbody>
+            </table>
+          </div>
         </div>
       </div>
     </div>
@@ -461,262 +409,228 @@ export default function NewTransactionModalLocal({
 }
 
 function getStyles(theme) {
-  const textColor = '#fff';
-  const modalBg = 'rgb(25,35,45)';
-  const borderColor = 'rgba(255,255,255,0.3)';
+  const isDark = theme.darkMode || theme.name === 'dark';
+  const lineColor = theme.inputBorder || (isDark ? '#777' : '#ccc');
+  const textColor = theme.color;
+  const inputBg = theme.inputBg || (isDark ? 'rgb(25,35,45)' : '#fff');
+  const tableHeaderBackground = theme.tableHeaderBg || (isDark ? 'rgb(69,83,100)' : '#f1f1f1');
+  const tableHeaderColor = isDark ? '#fff' : '#333';
   return {
-    overlay: {
-      position: 'fixed',
-      top: 0,
-      left: 0,
-      width: '100vw',
-      height: '100vh',
-      backgroundColor: 'rgba(0, 0, 0, 0.5)',
-      zIndex: 9999,
+    wrapper: {
+        width: '100%',
+  boxSizing: 'border-box',
+  padding: '1rem',
+  color: textColor,
+  backgroundColor: 'transparent',
+},
+    topSection: {
       display: 'flex',
-      justifyContent: 'center',
-      alignItems: 'center'
+      gap: '1rem',
+      marginTop: '2rem',
+      marginBottom: '1rem',
+      alignItems: 'flex-start'
     },
-    modal: {
-      backgroundColor: modalBg,
-      color: textColor,
-      border: `1px solid ${borderColor}`,
-      borderRadius: '6px',
-      width: '520px',
-      padding: '1rem',
+    formLeft: {
+      flex: 1,
       display: 'flex',
       flexDirection: 'column',
-      gap: '0.6rem',
-      maxHeight: '80vh',
-      overflowY: 'auto',
-      position: 'relative'
-    },
-    modalExpanded: {
-      backgroundColor: modalBg,
-      color: textColor,
-      border: `1px solid ${borderColor}`,
-      borderRadius: '6px',
-      width: '520px',
-      padding: '1rem',
-      display: 'flex',
-      flexDirection: 'column',
-      gap: '0.6rem',
-      maxHeight: '90vh',
-      overflowY: 'auto',
-      position: 'relative'
-    },
-    header: {
-      display: 'flex',
-      justifyContent: 'space-between',
-      alignItems: 'center'
-    },
-    headerRight: {
-      display: 'flex',
-      gap: '0.5rem'
-    },
-    title: {
-      margin: 0,
-      fontSize: '1rem'
-    },
-    settingsBtn: {
-      width: 22,
-      height: 22,
-      border: `1px solid ${borderColor}`,
-      borderRadius: 4,
-      background: 'none',
-      color: textColor,
-      cursor: 'pointer',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center'
-    },
-    closeBtn: {
-      background: 'none',
-      border: 'none',
-      fontSize: '1.2rem',
-      cursor: 'pointer',
-      color: textColor
-    },
-    settingsMenu: {
-      position: 'absolute',
-      top: '38px',
-      right: '2rem',
-      background: 'rgb(50,50,50)',
-      border: `1px solid ${borderColor}`,
-      borderRadius: 4,
-      padding: '6px 10px',
-      zIndex: 99999,
-      display: 'flex',
-      flexDirection: 'column',
-      gap: '4px',
-      width: '220px'
-    },
-    settingsItem: {
-      fontSize: '0.85rem',
-      color: textColor,
-      display: 'flex',
-      alignItems: 'center',
-      gap: '0.4rem'
-    },
-    body: {
-      display: 'flex',
-      flexDirection: 'column',
-      gap: '0.5rem'
+      gap: '0.75rem'
     },
     formRow: {
       display: 'flex',
       alignItems: 'center',
-      gap: '0.6rem'
-    },
-    label: {
-      width: '110px',
-      textAlign: 'right',
-      flexShrink: 0,
-      fontSize: '0.85rem'
-    },
-    valueText: {
-      fontWeight: 'bold',
-      fontSize: '0.9rem'
-    },
-    feeLine: {
-      display: 'flex',
-      alignItems: 'center',
       gap: '0.5rem'
     },
-    xBytes: {
+    formLabel: {
+      width: '120px',
+      textAlign: 'left',
       fontSize: '0.85rem',
-      opacity: 0.8
+      fontWeight: 'normal'
     },
-    sliderWrap: {
-      display: 'flex',
-      alignItems: 'center',
-      gap: '0.4rem',
-      flex: 1
-    },
-    sliderText: {
-      fontSize: '0.85rem',
-      opacity: 0.8
-    },
-    lockTimeWrap: {
-      display: 'flex',
-      alignItems: 'center',
-      gap: '0.4rem',
-      flex: 1
-    },
-    lockTimeSuffix: {
-      fontSize: '0.8rem',
-      opacity: 0.7
-    },
-    inputField: {
-      width: '70px',
-      height: 22,
-      border: `1px solid ${borderColor}`,
-      borderRadius: 4,
-      background: 'rgba(255,255,255,0.1)',
+    formInputFull: {
+      flex: 1,
+      padding: '3px 5px',
+      backgroundColor: inputBg,
       color: textColor,
-      fontSize: '0.85rem',
-      padding: '0 6px',
-      textAlign: 'right'
-    },
-    selectField: {
-      border: `1px solid ${borderColor}`,
+      border: `1px solid ${lineColor}`,
       borderRadius: 4,
-      background: 'rgba(255,255,255,0.1)',
+      outline: 'none',
+      fontSize: '0.85rem',
+      height: 24
+    },
+    formInputLine: {
+      display: 'flex',
+      gap: '0.5rem'
+    },
+    suffixContainer: {
+      position: 'relative',
+      width: '120px'
+    },
+    inputWithSuffix: {
+      width: '100%',
+      padding: '3px 28px 3px 5px',
+      border: `1px solid ${lineColor}`,
+      borderRadius: 4,
+      outline: 'none',
+      backgroundColor: inputBg,
       color: textColor,
-      fontSize: '0.85rem',
-      padding: '0 4px',
-      height: 22
+      boxSizing: 'border-box',
+      height: 24,
+      fontSize: '0.85rem'
     },
-    warningLine: {
-      fontSize: '0.85rem',
-      color: '#ffb'
-    },
-    loadingDraft: {
-      display: 'flex',
-      alignItems: 'center',
-      fontSize: '0.85rem',
-      marginTop: '0.5rem'
-    },
-    ioBox: {
-      marginTop: '0.5rem',
-      border: `1px solid ${borderColor}`,
-      borderRadius: 4,
-      padding: '0.3rem'
-    },
-    ioTitle: {
-      margin: 0,
-      fontSize: '0.85rem',
-      borderBottom: `1px solid ${borderColor}`,
-      paddingBottom: '0.2rem',
-      marginBottom: '0.3rem'
-    },
-    ioRow: {
+    suffixLabel: {
+      position: 'absolute',
+      right: 4,
+      top: '50%',
+      transform: 'translateY(-50%)',
+      pointerEvents: 'none',
       fontSize: '0.8rem',
-      marginBottom: '0.2rem'
+      color: isDark ? 'rgba(255,255,255,0.4)' : 'rgba(0,0,0,0.4)'
     },
-    ioLine: {
-      display: 'flex',
-      alignItems: 'center',
-      gap: '0.4rem',
-      flexWrap: 'wrap'
-    },
-    msgArea: {
-      display: 'flex',
-      flexDirection: 'column',
-      gap: '0.3rem',
-      marginTop: '0.5rem'
-    },
-    errorBox: {
-      backgroundColor: 'rgba(255,60,60,0.2)',
-      color: '#fbb',
-      padding: '0.4rem',
-      borderRadius: '4px',
+    expiryButton: {
+      padding: '2px 8px',
+      border: `1px solid ${lineColor}`,
+      borderRadius: 4,
+      backgroundColor: isDark ? 'rgb(69,83,100)' : 'none',
+      color: isDark ? '#fff' : textColor,
+      cursor: 'pointer',
+      height: 24,
       fontSize: '0.85rem'
     },
-    infoBox: {
-      backgroundColor: 'rgba(60,255,60,0.2)',
-      color: '#bfb',
-      padding: '0.4rem',
-      borderRadius: '4px',
-      fontSize: '0.85rem'
-    },
-    loadingBox: {
-      fontStyle: 'italic',
-      fontSize: '0.85rem'
-    },
-    footer: {
+    buttonRow: {
       display: 'flex',
       justifyContent: 'flex-end',
       gap: '0.5rem',
       marginTop: '0.5rem'
     },
-    cancelBtn: {
-      height: 22,
-      padding: '0 8px',
-      border: `1px solid ${borderColor}`,
+    clearBtn: {
+      padding: '2px 10px',
+      border: `1px solid ${lineColor}`,
       borderRadius: 4,
-      background: 'none',
-      color: textColor,
+      backgroundColor: isDark ? 'rgb(69,83,100)' : 'none',
+      color: isDark ? '#fff' : textColor,
       cursor: 'pointer',
-      fontSize: '0.8rem'
+      fontSize: '0.85rem',
+      height: 24
     },
-    okBtn: {
-      height: 22,
-      padding: '0 10px',
-      border: `1px solid ${borderColor}`,
+    createBtn: {
+      padding: '2px 10px',
+      border: `1px solid ${lineColor}`,
       borderRadius: 4,
-      background: 'rgba(255,255,255,0.1)',
-      color: textColor,
+      backgroundColor: isDark ? 'rgb(69,83,100)' : 'none',
+      color: isDark ? '#fff' : textColor,
       cursor: 'pointer',
-      fontWeight: 'bold',
-      fontSize: '0.8rem'
+      fontSize: '0.85rem',
+      height: 24
     },
-    successContainer: {
+    formRight: {
       display: 'flex',
       flexDirection: 'column',
+      alignItems: 'flex-end',
+      gap: '0.5rem',
+      alignSelf: 'flex-start',
+      marginTop: '-2.1rem'
+    },
+    rightButtonsRow: {
+      display: 'flex',
+      gap: '0.5rem'
+    },
+    uriToggleBtn: {
+      display: 'flex',
       alignItems: 'center',
-      gap: '0.4rem',
-      marginTop: '1rem'
+      padding: '2px 8px',
+      backgroundColor: isDark ? 'rgb(69,83,100)' : 'none',
+      color: isDark ? '#fff' : textColor,
+      border: `1px solid ${lineColor}`,
+      borderRadius: 4,
+      cursor: 'pointer',
+      fontSize: '0.8rem',
+      height: 24
+    },
+    uriQrBtn: {
+      width: 36,
+      height: 24,
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      backgroundColor: isDark ? 'rgb(69,83,100)' : 'none',
+      color: isDark ? '#fff' : textColor,
+      border: `1px solid ${lineColor}`,
+      borderRadius: 4,
+      cursor: 'pointer'
+    },
+    uriBorder: {
+      width: '160px',
+      height: '160px',
+      border: `1px solid ${lineColor}`,
+      borderRadius: 6,
+      padding: 4,
+      boxSizing: 'border-box',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center'
+    },
+    uriTextarea: {
+      width: '98%',
+      height: '90%',
+      resize: 'none',
+      backgroundColor: 'transparent',
+      border: 'none',
+      outline: 'none',
+      color: textColor,
+      fontSize: '0.85rem'
+    },
+    qrContainer: {
+      backgroundColor: '#fff',
+      borderRadius: 4,
+      padding: 4
+    },
+    bottomSection: {
+      flex: 1,
+      marginTop: '-1rem'
+    },
+    tableTitle: {
+      margin: '0 0 0.5rem',
+      fontSize: '1rem'
+    },
+    tableWrapper: {
+      border: `1px solid ${lineColor}`,
+      borderRadius: 6
+    },
+    requestsTable: {
+      width: '100%',
+      borderCollapse: 'separate',
+      borderSpacing: 0,
+      fontSize: '0.85rem',
+      tableLayout: 'fixed'
+    },
+    tableHeaderRow: {
+      backgroundColor: tableHeaderBackground,
+      color: tableHeaderColor
+    },
+    th: {
+      textAlign: 'left',
+      fontSize: '0.85rem',
+      padding: '0.4rem',
+      lineHeight: 1.2,
+      borderBottom: `1px solid ${lineColor}`
+    },
+    td: {
+      padding: '0.5rem',
+      borderBottom: `1px solid ${lineColor}`,
+      fontSize: '0.85rem',
+      overflow: 'hidden',
+      textOverflow: 'ellipsis',
+      whiteSpace: 'nowrap'
+    },
+    tdFirstBottom: {
+      borderBottomLeftRadius: 6
+    },
+    statusIcon: {
+      width: 14,
+      height: 14,
+      marginRight: 4,
+      verticalAlign: 'middle'
     }
   };
 }
