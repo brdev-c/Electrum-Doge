@@ -156,13 +156,24 @@ export default function TransactionsPanel({ theme }) {
     return transactions.some(t2 => t2.txid === tx.txid && t2.direction === 'out');
   }
 
-  return (
-    <div style={styles.wrapper}>
-      {error && <div style={styles.errorMsg}>{error}</div>}
-      {loading && <div style={styles.loadingMsg}>Loading transactions...</div>}
-      {!loading && !error && transactions.length === 0 && (
-        <div style={styles.noDataMsg}>No transactions found.</div>
-      )}
+return (
+  <div style={styles.wrapper}>
+    {error && <div style={styles.errorMsg}>{error}</div>}
+    {loading && (
+      <div style={styles.loadingMsg}>
+        <p style={{ margin: 0 }}>
+          Loading transactions...
+        </p>
+        <p style={{ margin: '4px 0 0 0', fontSize: '0.9rem', color: '#666' }}>
+          If this loading takes more than 5-10 seconds,
+          please go to <strong>Settings &gt; Server Settings</strong>,
+          click <strong>Force Reconnect</strong>, and try again.
+        </p>
+      </div>
+    )}
+    {!loading && !error && transactions.length === 0 && (
+      <div style={styles.noDataMsg}>No transactions found.</div>
+    )}
       {!loading && transactions.length > 0 && (
         <div style={styles.mainBlock}>
           <div style={styles.sortAndRefreshRow}>
