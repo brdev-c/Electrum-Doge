@@ -47,7 +47,6 @@ It supports wallets generated via BIP39/BIP32 (e.g., 12-word seed phrases), part
 
 Alternatively, clone the repository directly:
 
-```bash
 git clone https://github.com/brdev/ElectrumDogeWallet.git
 
 Below is the rest of the README (in plain text, not code):
