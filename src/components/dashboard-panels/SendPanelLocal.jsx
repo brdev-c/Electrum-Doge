@@ -29,7 +29,7 @@ function SendSuccessModal({ onClose }) {
         </div>
         <div style={styles.modalBody}>
           <img
-            src="/images/success.png"
+            src="./images/success.png"
             alt="Success"
             style={{ width: 80, height: 80 }}
           />
@@ -64,13 +64,10 @@ export default function SendPanelLocal() {
   const [description, setDescription] = useState('');
   const [amountDoge, setAmountDoge] = useState('');
   const [amountFiat, setAmountFiat] = useState('');
-
   const [allUtxos, setAllUtxos] = useState([]);
   const [insufficientFunds, setInsufficientFunds] = useState(false);
   const [canSend, setCanSend] = useState(false);
-
   const [maxUsed, setMaxUsed] = useState(false);
-
   const [localTxList, setLocalTxList] = useState([]);
   const walletId = wallet?.mnemonic || wallet?.address || 'temp_wallet';
 
@@ -186,7 +183,7 @@ export default function SendPanelLocal() {
     const constraints = { video: { deviceId: cameraDeviceId } };
     navigator.mediaDevices
       .getUserMedia(constraints)
-      .then((stream) => {
+      .then(stream => {
         streamRef = stream;
         if (videoRef.current) {
           videoRef.current.srcObject = stream;
@@ -196,12 +193,12 @@ export default function SendPanelLocal() {
           };
         }
       })
-      .catch((err) => {
+      .catch(err => {
         setCameraError(`Failed to open camera: ${err.name} / ${err.message}`);
       });
     return () => {
       if (streamRef) {
-        streamRef.getTracks().forEach((t) => t.stop());
+        streamRef.getTracks().forEach(t => t.stop());
       }
       cancelAnimationFrame(frameIdRef.current);
     };
@@ -289,7 +286,7 @@ export default function SendPanelLocal() {
       return;
     }
     const reader = new FileReader();
-    reader.onload = (ev) => {
+    reader.onload = ev => {
       setScreenImg(ev.target.result);
     };
     reader.readAsDataURL(file);
@@ -317,6 +314,7 @@ export default function SendPanelLocal() {
       h: Math.abs(y2 - mouseDownPos.y)
     });
   }
+
   function onMouseUpCanvas() {
     setMouseDownPos(null);
   }
@@ -376,7 +374,7 @@ export default function SendPanelLocal() {
       if (!file) return;
       if (file.type === 'text/plain') {
         const reader = new FileReader();
-        reader.onload = (ev) => {
+        reader.onload = ev => {
           const text = ev.target.result;
           const possible = parseTextForDogeAddress(text);
           if (possible) {
@@ -388,7 +386,7 @@ export default function SendPanelLocal() {
         reader.readAsText(file);
       } else if (file.type.startsWith('image/')) {
         const reader = new FileReader();
-        reader.onload = (ev) => {
+        reader.onload = ev => {
           const dataURL = ev.target.result;
           const img = new Image();
           img.onload = () => {
@@ -432,11 +430,18 @@ export default function SendPanelLocal() {
       });
   }, [wallet, serverParam]);
 
+  const draftTimerRef = useRef(null);
+
   useEffect(() => {
-    const timer = setTimeout(() => {
+    if (draftTimerRef.current) {
+      clearTimeout(draftTimerRef.current);
+    }
+    draftTimerRef.current = setTimeout(() => {
       draftCheck();
-    }, 500);
-    return () => clearTimeout(timer);
+    }, 3000);
+    return () => {
+      clearTimeout(draftTimerRef.current);
+    };
   }, [amountDoge, allUtxos, recipient]);
 
   async function draftCheck() {
@@ -467,8 +472,6 @@ export default function SendPanelLocal() {
     } catch (err) {
       if (err.message.includes('Not enough funds')) {
         setInsufficientFunds(true);
-      } else {
-        console.warn('draftCheck error:', err);
       }
     }
   }
@@ -476,7 +479,7 @@ export default function SendPanelLocal() {
   function handlePaste() {
     navigator.clipboard
       .readText()
-      .then((txt) => {
+      .then(txt => {
         setRecipient(txt);
       })
       .catch(() => {
@@ -516,7 +519,6 @@ export default function SendPanelLocal() {
       setCanSend(true);
       setMaxUsed(true);
     } catch (err) {
-      console.warn('Max button error:', err);
       setInsufficientFunds(true);
       setCanSend(false);
       setMaxUsed(false);
@@ -636,7 +638,7 @@ export default function SendPanelLocal() {
         <span style={styles.confCell}>
           {conf}/6
           <img
-            src="/images/pending.png"
+            src="./images/pending.png"
             alt="pending"
             style={{ width: 14, height: 14, marginLeft: 4 }}
           />
@@ -646,7 +648,7 @@ export default function SendPanelLocal() {
       return (
         <span style={styles.confCell}>
           <img
-            src="/images/donetrans.png"
+            src="./images/donetrans.png"
             alt="confirmed"
             style={{ width: 14, height: 14 }}
           />
@@ -688,13 +690,13 @@ export default function SendPanelLocal() {
   const isSaveDisabled = !isRecipientFilled || !isDescriptionFilled || !isAmountFilled;
   const isRecipientValid = isValidDogeAddress(recipient);
   const isTransferDisabled = !isRecipientValid || !isAmountFilled || !canSend;
-
   const [tableMaxHeight, setTableMaxHeight] = useState('200px');
+
   useEffect(() => {
     function updateTableHeight() {
       const rowHeight = 40;
       const minHeight = 3.5 * rowHeight;
-      const headerOffset = 350;
+      const headerOffset = 345;
       const available = window.innerHeight - headerOffset;
       const effectiveHeight = available > minHeight ? available : minHeight;
       setTableMaxHeight(`${effectiveHeight}px`);
@@ -732,11 +734,11 @@ export default function SendPanelLocal() {
             style={styles.wideInput}
             type="text"
             value={recipient}
-            onChange={(e) => setRecipient(e.target.value)}
+            onChange={e => setRecipient(e.target.value)}
           />
           <div style={styles.pasteAndSettings} ref={menuRef}>
             <button style={styles.settingsBtn} onClick={toggleSettings}>
-              <img src="/images/settings.png" alt="Settings" style={styles.iconImg} />
+              <img src="./images/settings.png" alt="Settings" style={styles.iconImg} />
             </button>
             {showSettings && (
               <div style={styles.settingsMenu}>
@@ -754,7 +756,7 @@ export default function SendPanelLocal() {
               </div>
             )}
             <button style={styles.pasteBtn} onClick={handlePaste}>
-              <img src="/images/paste-icon.png" alt="Paste" style={styles.iconImg} />
+              <img src="./images/paste-icon.png" alt="Paste" style={styles.iconImg} />
             </button>
           </div>
         </div>
@@ -765,7 +767,7 @@ export default function SendPanelLocal() {
           style={styles.wideInput}
           type="text"
           value={description}
-          onChange={(e) => setDescription(e.target.value)}
+          onChange={e => setDescription(e.target.value)}
         />
       </div>
       <div style={styles.formRow}>
@@ -975,6 +977,7 @@ function isValidDogeAddress(addr) {
   if (addr.length < 30 || addr.length > 40) return false;
   return true;
 }
+
 function parseTextForDogeAddress(text) {
   const lines = text.split(/\r?\n/);
   for (let line of lines) {
@@ -999,19 +1002,19 @@ function getStyles(theme) {
       position: 'relative',
       padding: '2rem 1rem',
       fontSize: '0.85rem',
-      color: textColor,
+      color: textColor
     },
     formRow: {
       display: 'flex',
       alignItems: 'center',
       marginBottom: '0.6rem',
-      gap: '0.5rem',
+      gap: '0.5rem'
     },
     formLabel: {
       width: '80px',
       textAlign: 'left',
       fontWeight: 'bold',
-      flexShrink: 0,
+      flexShrink: 0
     },
     wideInput: {
       width: '500px',
@@ -1022,10 +1025,10 @@ function getStyles(theme) {
       color: textColor,
       outline: 'none',
       fontSize: '0.85rem',
-      padding: '0 6px',
+      padding: '0 6px'
     },
     recipientContainer: {
-      position: 'relative',
+      position: 'relative'
     },
     pasteAndSettings: {
       position: 'absolute',
@@ -1034,7 +1037,7 @@ function getStyles(theme) {
       display: 'flex',
       flexDirection: 'column',
       gap: '2px',
-      alignItems: 'flex-end',
+      alignItems: 'flex-end'
     },
     settingsBtn: {
       width: 30,
@@ -1046,7 +1049,7 @@ function getStyles(theme) {
       cursor: 'pointer',
       display: 'flex',
       alignItems: 'center',
-      justifyContent: 'center',
+      justifyContent: 'center'
     },
     pasteBtn: {
       width: 30,
@@ -1058,11 +1061,11 @@ function getStyles(theme) {
       cursor: 'pointer',
       display: 'flex',
       alignItems: 'center',
-      justifyContent: 'center',
+      justifyContent: 'center'
     },
     iconImg: {
       width: 14,
-      height: 14,
+      height: 14
     },
     settingsMenu: {
       position: 'absolute',
@@ -1073,28 +1076,28 @@ function getStyles(theme) {
       borderRadius: 4,
       padding: '4px 0',
       minWidth: 170,
-      zIndex: 999,
+      zIndex: 999
     },
     menuSeparator: {
       height: 1,
       backgroundColor: isDark ? '#666' : '#ccc',
-      margin: '2px 0',
+      margin: '2px 0'
     },
     menuItem: {
       padding: '6px 12px',
       color: textColor,
       fontSize: '0.85rem',
       cursor: 'pointer',
-      whiteSpace: 'nowrap',
+      whiteSpace: 'nowrap'
     },
     amountLine: {
       display: 'flex',
       alignItems: 'center',
-      gap: '0.8rem',
+      gap: '0.8rem'
     },
     suffixContainer: {
       position: 'relative',
-      width: 110,
+      width: 110
     },
     suffixInput: {
       width: '100%',
@@ -1106,7 +1109,7 @@ function getStyles(theme) {
       outline: 'none',
       fontSize: '0.85rem',
       padding: '0 28px 0 6px',
-      boxSizing: 'border-box',
+      boxSizing: 'border-box'
     },
     suffixLabel: {
       position: 'absolute',
@@ -1116,20 +1119,20 @@ function getStyles(theme) {
       color: textColor,
       opacity: 0.6,
       fontSize: '0.75rem',
-      pointerEvents: 'none',
+      pointerEvents: 'none'
     },
     maxLink: {
       fontSize: '0.85rem',
       opacity: 0.7,
       color: textColor,
       cursor: 'pointer',
-      textDecoration: 'underline',
+      textDecoration: 'underline'
     },
     buttonsContainer: {
       marginTop: '1.2rem',
       marginLeft: '450px',
       display: 'flex',
-      gap: '0.5rem',
+      gap: '0.5rem'
     },
     clearBtn: {
       height: 22,
@@ -1139,7 +1142,7 @@ function getStyles(theme) {
       background: 'none',
       color: textColor,
       cursor: 'pointer',
-      fontSize: '0.8rem',
+      fontSize: '0.8rem'
     },
     saveBtn: {
       height: 22,
@@ -1149,7 +1152,7 @@ function getStyles(theme) {
       background: 'none',
       color: textColor,
       cursor: 'pointer',
-      fontSize: '0.8rem',
+      fontSize: '0.8rem'
     },
     payBtn: {
       height: 22,
@@ -1160,11 +1163,11 @@ function getStyles(theme) {
       color: textColor,
       cursor: 'pointer',
       fontWeight: 'bold',
-      fontSize: '0.8rem',
+      fontSize: '0.8rem'
     },
     disabledBtn: {
       opacity: 0.5,
-      cursor: 'not-allowed',
+      cursor: 'not-allowed'
     },
     modalOverlay: {
       position: 'fixed',
@@ -1176,7 +1179,7 @@ function getStyles(theme) {
       zIndex: 9999,
       display: 'flex',
       justifyContent: 'center',
-      alignItems: 'center',
+      alignItems: 'center'
     },
     modalContent: {
       backgroundColor: isDark ? '#333' : '#fff',
@@ -1187,29 +1190,29 @@ function getStyles(theme) {
       maxWidth: '95%',
       display: 'flex',
       flexDirection: 'column',
-      gap: '1rem',
+      gap: '1rem'
     },
     modalHeader: {
       display: 'flex',
       justifyContent: 'space-between',
-      alignItems: 'center',
+      alignItems: 'center'
     },
     modalTitle: {
       margin: 0,
-      fontSize: '1rem',
+      fontSize: '1rem'
     },
     modalCloseBtn: {
       background: 'none',
       border: 'none',
       fontSize: '1.2rem',
       cursor: 'pointer',
-      color: isDark ? '#fff' : '#333',
+      color: isDark ? '#fff' : '#333'
     },
     modalBody: {
       display: 'flex',
       flexDirection: 'column',
       alignItems: 'center',
-      gap: '0.5rem',
+      gap: '0.5rem'
     },
     modalError: {
       backgroundColor: isDark ? 'rgba(180,60,60,0.2)' : '#fbdada',
@@ -1217,18 +1220,18 @@ function getStyles(theme) {
       padding: '0.5rem',
       borderRadius: '4px',
       width: '100%',
-      boxSizing: 'border-box',
+      boxSizing: 'border-box'
     },
     videoPreview: {
       width: '100%',
       maxHeight: '50vh',
-      backgroundColor: '#000',
+      backgroundColor: '#000'
     },
     screenActions: {
       display: 'flex',
       flexDirection: 'column',
       alignItems: 'center',
-      gap: '0.5rem',
+      gap: '0.5rem'
     },
     selectBtn: {
       padding: '0.3rem 0.6rem',
@@ -1237,7 +1240,7 @@ function getStyles(theme) {
       background: 'none',
       color: isDark ? '#fff' : '#333',
       cursor: 'pointer',
-      fontSize: '0.85rem',
+      fontSize: '0.85rem'
     },
     screenshotWrapper: {
       width: '100%',
@@ -1245,14 +1248,14 @@ function getStyles(theme) {
       overflow: 'auto',
       border: `1px solid ${borderColor}`,
       borderRadius: 4,
-      position: 'relative',
+      position: 'relative'
     },
     screenshotCanvas: {
-      display: 'block',
+      display: 'block'
     },
     modalFooter: {
       display: 'flex',
-      justifyContent: 'center',
+      justifyContent: 'center'
     },
     errorBox: {
       marginTop: '0.5rem',
@@ -1260,36 +1263,36 @@ function getStyles(theme) {
       color: isDark ? '#fbb' : '#900',
       padding: '0.4rem',
       borderRadius: '4px',
-      fontSize: '0.85rem',
+      fontSize: '0.85rem'
     },
     outgoingSection: {
-      marginTop: '2rem',
+      marginTop: '2rem'
     },
     tableTitle: {
       margin: '1rem 0 0.5rem',
-      fontSize: '1rem',
+      fontSize: '1rem'
     },
     tableWrapper: {
       border: `1px solid ${borderColor}`,
       borderRadius: 6,
-      overflow: 'hidden',
+      overflow: 'hidden'
     },
     outgoingTable: {
       width: '100%',
       borderCollapse: 'separate',
       borderSpacing: 0,
       fontSize: '0.85rem',
-      tableLayout: 'fixed',
+      tableLayout: 'fixed'
     },
     tableHeaderRow: {
       backgroundColor: isDark ? 'rgb(69,83,100)' : '#f1f1f1',
-      color: isDark ? '#fff' : '#333',
+      color: isDark ? '#fff' : '#333'
     },
     thFirst: {
-      borderTopLeftRadius: 6,
+      borderTopLeftRadius: 6
     },
     thLast: {
-      borderTopRightRadius: 6,
+      borderTopRightRadius: 6
     },
     th: {
       textAlign: 'left',
@@ -1299,13 +1302,13 @@ function getStyles(theme) {
       textOverflow: 'ellipsis',
       padding: '0.4rem',
       lineHeight: 1.2,
-      borderBottom: `1px solid ${borderColor}`,
+      borderBottom: `1px solid ${borderColor}`
     },
     tdFirstBottom: {
-      borderBottomLeftRadius: 6,
+      borderBottomLeftRadius: 6
     },
     tdLastBottom: {
-      borderBottomRightRadius: 6,
+      borderBottomRightRadius: 6
     },
     td: {
       padding: '0.4rem',
@@ -1315,17 +1318,17 @@ function getStyles(theme) {
       textOverflow: 'ellipsis',
       whiteSpace: 'nowrap',
       lineHeight: 1.2,
-      verticalAlign: 'middle',
+      verticalAlign: 'middle'
     },
     confCell: {
       display: 'flex',
       alignItems: 'center',
-      gap: '4px',
+      gap: '4px'
     },
     txidCell: {
       display: 'flex',
       alignItems: 'center',
-      gap: '0.4rem',
+      gap: '0.4rem'
     },
     copyBtn: {
       padding: '0.2rem 0.4rem',
@@ -1334,7 +1337,7 @@ function getStyles(theme) {
       borderRadius: 4,
       background: 'none',
       color: textColor,
-      cursor: 'pointer',
+      cursor: 'pointer'
     },
     explorerBtn: {
       padding: '0.2rem 0.6rem',
@@ -1343,7 +1346,7 @@ function getStyles(theme) {
       borderRadius: 4,
       background: 'none',
       color: textColor,
-      cursor: 'pointer',
+      cursor: 'pointer'
     }
   };
 }
