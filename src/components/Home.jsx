@@ -5,19 +5,13 @@ import { useWallet } from '../context/WalletContext';
 import CreateSeed from './CreateSeed';
 import ImportSeed from './ImportSeed';
 import LedgerSetup from './LedgerSetup';
+import path from 'path';
 
 export default function Home() {
   const navigate = useNavigate();
   const location = useLocation();
   const { theme } = useThemeContext();
   const { walletFileName, setWalletFileName, setWalletWithPath, masterPassword, setMasterPassword } = useWallet();
-  useEffect(() => {
-    const params = new URLSearchParams(location.search);
-    if (params.get('resetFile') === '1') {
-      setWalletName('');
-      setWalletFileName('');
-    }
-  }, [location, setWalletFileName]);
   const [step, setStep] = useState(1);
   const [walletName, setWalletName] = useState(walletFileName || '');
   const [fileExists, setFileExists] = useState(false);
@@ -32,11 +26,25 @@ export default function Home() {
   const [importSeedSubStep, setImportSeedSubStep] = useState(1);
   const ledgerRef = useRef(null);
   const [ledgerSubStep, setLedgerSubStep] = useState(1);
+
+  const searchParams = new URLSearchParams(location.search);
+  const fromImportKey = searchParams.get('from') === 'import-key';
+  const fromCreateRestore = searchParams.get('fromCreateRestore') === '1';
+
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    if (params.get('resetFile') === '1') {
+      setWalletName('');
+      setWalletFileName('');
+    }
+  }, [location, setWalletFileName]);
+
   useEffect(() => {
     if (step === 1) {
       checkFileStatus(walletName);
     }
   }, [walletName, step]);
+
   async function checkFileStatus(filePath) {
     setDecryptionError('');
     setUserPassword('');
@@ -55,8 +63,7 @@ export default function Home() {
           setFileExists(result.exists);
           setIsEncrypted(result.encrypted);
         }
-      } catch (err) {
-        console.error('checkFileEncryption error:', err);
+      } catch {
         setFileExists(false);
         setIsEncrypted(false);
       }
@@ -65,6 +72,7 @@ export default function Home() {
       setIsEncrypted(false);
     }
   }
+
   async function handleBrowse() {
     setDecryptionError('');
     setUserPassword('');
@@ -75,19 +83,32 @@ export default function Home() {
       }
     }
   }
+
   function handleBack() {
+
+    if (fromCreateRestore) {
+      navigate('/dashboard');
+      return;
+    }
+
     if (step === 1) {
-      if (window.electronAPI?.appQuit) {
-        window.electronAPI.appQuit();
+      if (fromImportKey) {
+        navigate('/dashboard');
       } else {
-        window.close();
+        if (window.electronAPI?.appQuit) {
+          window.electronAPI.appQuit();
+        } else {
+          window.close();
+        }
       }
       return;
     }
+
     if (step === 2) {
       setStep(1);
       return;
     }
+
     if (step === 3) {
       if (keyStorageChoice === 'new_seed' && createSeedRef.current) {
         const r = createSeedRef.current.handleBack();
@@ -118,6 +139,7 @@ export default function Home() {
       }
     }
   }
+
   async function handleNext() {
     if (step === 1) {
       if (!walletName.trim()) return;
@@ -142,7 +164,6 @@ export default function Home() {
           setWalletWithPath(json, walletName);
           navigate('/dashboard');
         } catch (err) {
-          console.error('Open unencrypted file error:', err);
           setDecryptionError('Open file error: ' + err.message);
         }
         return;
@@ -194,6 +215,7 @@ export default function Home() {
       }
     }
   }
+
   let rightBtnLabel = 'Next';
   if (step === 3 && keyStorageChoice === 'new_seed' && createSeedSubStep === 3) {
     rightBtnLabel = 'Finish';
@@ -204,12 +226,14 @@ export default function Home() {
   if (step === 3 && keyStorageChoice === 'ledger' && ledgerSubStep === 2) {
     rightBtnLabel = 'Finish';
   }
+
   const s = getStyles(theme, inputFocused);
   const radioCss = getRadioCss(theme);
   let nextDisabled = false;
   if (step === 1 && !walletName.trim()) {
     nextDisabled = true;
   }
+
   let content;
   if (step === 1) {
     content = (
@@ -259,15 +283,20 @@ export default function Home() {
       );
     }
   }
+
   return (
     <div style={s.container}>
       <style>{radioCss}</style>
       <img src="images/electrum_logo.png" alt="Electrum Logo" style={s.logo} />
       <div style={s.boundingBox}>{content}</div>
+
       <div style={s.footerButtons}>
-        <button style={s.backBtn} onClick={handleBack}>
-          Back
-        </button>
+        {(fromCreateRestore || fromImportKey || step > 1) && (
+          <button style={s.backBtn} onClick={handleBack}>
+            Back
+          </button>
+        )}
+
         <button style={s.nextBtn} onClick={handleNext} disabled={nextDisabled}>
           {rightBtnLabel}
         </button>
@@ -276,7 +305,19 @@ export default function Home() {
   );
 }
 
-function Step1FileSelect({ theme, walletName, setWalletName, fileExists, isEncrypted, decryptionError, userPassword, setUserPassword, inputFocused, setInputFocused, handleBrowse }) {
+function Step1FileSelect({
+  theme,
+  walletName,
+  setWalletName,
+  fileExists,
+  isEncrypted,
+  decryptionError,
+  userPassword,
+  setUserPassword,
+  inputFocused,
+  setInputFocused,
+  handleBrowse
+}) {
   const s = getStyles(theme, inputFocused);
   return (
     <>
@@ -341,15 +382,36 @@ function Step2Choice({ theme, keyStorageChoice, setKeyStorageChoice }) {
         <div style={s.radioContainer}>
           <div style={s.radioGroup}>
             <label style={s.radioLabel}>
-              <input type="radio" name="keyStorage" value="new_seed" checked={keyStorageChoice === 'new_seed'} onChange={() => setKeyStorageChoice('new_seed')} className="radioInput" />
+              <input
+                type="radio"
+                name="keyStorage"
+                value="new_seed"
+                checked={keyStorageChoice === 'new_seed'}
+                onChange={() => setKeyStorageChoice('new_seed')}
+                className="radioInput"
+              />
               Create a new seed phrase
             </label>
             <label style={s.radioLabel}>
-              <input type="radio" name="keyStorage" value="existing_seed" checked={keyStorageChoice === 'existing_seed'} onChange={() => setKeyStorageChoice('existing_seed')} className="radioInput" />
+              <input
+                type="radio"
+                name="keyStorage"
+                value="existing_seed"
+                checked={keyStorageChoice === 'existing_seed'}
+                onChange={() => setKeyStorageChoice('existing_seed')}
+                className="radioInput"
+              />
               I already have a seed phrase
             </label>
             <label style={s.radioLabel}>
-              <input type="radio" name="keyStorage" value="ledger" checked={keyStorageChoice === 'ledger'} onChange={() => setKeyStorageChoice('ledger')} className="radioInput" />
+              <input
+                type="radio"
+                name="keyStorage"
+                value="ledger"
+                checked={keyStorageChoice === 'ledger'}
+                onChange={() => setKeyStorageChoice('ledger')}
+                className="radioInput"
+              />
               Use a hardware wallet (Ledger/Trezor)
             </label>
           </div>
