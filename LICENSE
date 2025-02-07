@@ -1,24 +1,28 @@
-MIT License - Electrum Doge Crypto Wallet Extended License
+MIT License
+
 Copyright (c) 2025 brdev
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the “Software”), to deal
+of this software and associated documentation files (the "Software"), to deal
 in the Software without restriction, including without limitation the rights
 to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 copies of the Software, and to permit persons to whom the Software is
 furnished to do so, subject to the following conditions:
 
-1. The above copyright notice and this permission notice shall be included
-   in all copies or substantial portions of the Software.
+The above copyright notice and this permission notice shall be included
+in all copies or substantial portions of the Software.
 
-2. THE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND, EXPRESS
-   OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-   FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
-   THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-   LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
-   FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
-   DEALINGS IN THE SOFTWARE.
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR
+OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
+ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+OTHER DEALINGS IN THE SOFTWARE.
 
+-------------------------------------------------------------------------------
+ADDITIONAL TERMS FOR ELECTRUM DOGE CRYPTO WALLET EXTENDED LICENSE
+-------------------------------------------------------------------------------
 This license is extended and augmented for the specific use-case of the Electrum Doge
 cryptocurrency wallet software. It is intended to ensure clear communication of rights
 and responsibilities for developers, users, and contributors.
@@ -62,7 +66,7 @@ The Software may be updated or modified from time to time. Each modification mus
 license text as outlined herein, ensuring that the rights and responsibilities are preserved in all
 distributed versions.
 
-It is strongly recommended that users perform regular security audits and backup their wallet data
+It is strongly recommended that users perform regular security audits and back up their wallet data
 to prevent potential loss of funds. The authors provide guidance and best practices, but ultimate
 security is the responsibility of the user.
 
@@ -73,8 +77,8 @@ jurisdiction applicable to the primary contributors of the Software.
 Users who distribute the Software in any form must include this license text in its entirety, without
 alteration or omission, in any associated documentation or distribution package.
 
-The authors and contributors reserve the right to update or clarify this license at any time, provided that
-such updates do not retroactively alter the terms under which previously distributed versions of the
+The authors and contributors reserve the right to update or clarify this license at any time, provided
+that such updates do not retroactively alter the terms under which previously distributed versions of the
 Software were provided.
 
 It is the duty of every user and contributor to ensure that the Software is used in a manner that is
@@ -97,4 +101,5 @@ For further clarification or legal inquiries regarding this license, please cont
 brdev@example.com or refer to the official repository on GitHub for updates and community discussions.
 
 This license supersedes any previous licensing agreements for the Software and establishes a clear framework
-for the distribution, modification, and use of Electrum Doge, ensuring that it remains free, open, and secure for all users.
+for the distribution, modification, and use of Electrum Doge, ensuring that it remains free, open, and secure
+for all users.
