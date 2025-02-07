@@ -6,9 +6,7 @@
   <a href="https://github.com/brdev-c/Electrum-Doge/releases">
     <img src="https://img.shields.io/github/v/release/brdev-c/Electrum-Doge?include_prereleases&style=flat-square" alt="Latest Release" />
   </a>
-
 </p>
-
 
 <h1>Electrum Doge Wallet</h1>
 
