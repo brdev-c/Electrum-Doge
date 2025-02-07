@@ -2,6 +2,17 @@
 <html lang="en">
 <body>
 
+<p>
+  <a href="https://github.com/brdev-c/Electrum-Doge/releases">
+    <img src="https://img.shields.io/github/v/release/brdev-c/Electrum-Doge?include_prereleases&style=flat-square" alt="Latest Release" />
+  </a>
+
+  <a href="https://github.com/brdev-c/Electrum-Doge/blob/main/LICENSE">
+    <img src="https://img.shields.io/github/license/brdev-c/Electrum-Doge?style=flat-square" alt="License" />
+  </a>
+</p>
+
+
 <h1>Electrum Doge Wallet</h1>
 
 <p>
