@@ -1,22 +1,9 @@
+[![Latest Release](https://img.shields.io/github/v/release/brdev-c/Electrum-Doge?include_prereleases&style=flat-square)](https://github.com/brdev-c/Electrum-Doge/releases)
+[![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)](https://github.com/brdev-c/Electrum-Doge/blob/main/LICENSE)
 <!DOCTYPE html>
 <html lang="en">
 <body>
-
 <h1> 🌟 Electrum Doge Wallet</h1>
-<p>
-  <a href="https://github.com/brdev-c/Electrum-Doge/releases">
-    <img src="https://img.shields.io/github/v/release/brdev-c/Electrum-Doge?include_prereleases&style=flat-square" alt="Latest Release" />
-  </a>
-<a href="https://github.com/brdev-c/Electrum-Doge/blob/main/LICENSE">
-  <img
-    src="https://img.shields.io/badge/license-MIT-green.svg"
-    alt="License: MIT"
-  />
-</a>
-
-</a>
-
-</p>
 <p>
   A Dogecoin wallet built on the Electrum framework. Supports BIP39/BIP32 (12-word seeds),  
   single WIF private keys, partial Ledger integration, and custom Electrum servers.
