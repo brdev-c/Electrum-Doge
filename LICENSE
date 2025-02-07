@@ -1,21 +1,100 @@
-MIT License
-
+MIT License - Electrum Doge Crypto Wallet Extended License
 Copyright (c) 2025 brdev
 
-Permission is hereby granted, free of charge, to any person obtaining a copy 
-of this software and associated documentation files (the “Software”), to deal 
-in the Software without restriction, including without limitation the rights 
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell 
-copies of the Software, and to permit persons to whom the Software is 
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the “Software”), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
 furnished to do so, subject to the following conditions:
 
-1. The above copyright notice and this permission notice shall be included 
+1. The above copyright notice and this permission notice shall be included
    in all copies or substantial portions of the Software.
 
-2. THE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND, EXPRESS 
-   OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, 
-   FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL 
-   THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER 
-   LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING 
-   FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER 
+2. THE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND, EXPRESS
+   OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+   FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+   THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+   LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+   FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
    DEALINGS IN THE SOFTWARE.
+
+This license is extended and augmented for the specific use-case of the Electrum Doge
+cryptocurrency wallet software. It is intended to ensure clear communication of rights
+and responsibilities for developers, users, and contributors.
+
+The Software is designed for managing Dogecoin assets and performing secure
+transactions on the Dogecoin blockchain. It facilitates wallet creation, signing
+of transactions, balance monitoring, and other functionalities related to
+cryptocurrency management.
+
+By using the Software, you acknowledge that you understand the inherent risks associated
+with cryptocurrency transactions, including but not limited to:
+a) Loss of access to private keys.
+b) Volatility of cryptocurrency values.
+c) Potential vulnerabilities exploited by malicious actors.
+
+The user is responsible for maintaining the security of their private keys and for ensuring
+that all transactions are conducted in a secure environment.
+
+This license applies to all aspects of the Software, including but not limited to its source code,
+compilation outputs, and any associated documentation provided to the user.
+
+Any modifications, derivative works, or distributions of the Software must retain the complete
+text of this license in all copies, or substantial portions, to ensure that subsequent users
+are fully informed of the terms under which the Software is provided.
+
+Developers and contributors are encouraged to extend the Software while adhering to the principles
+of open source software and the spirit of collaboration. Contributions that enhance security,
+usability, or interoperability are highly valued.
+
+The Software is provided without any warranty. Under no circumstances shall the authors or
+contributors be liable for any direct, indirect, incidental, or consequential damages arising
+from the use of the Software. This includes but is not limited to losses due to:
+a) Unauthorized access to cryptocurrency wallets.
+b) Data breaches or other security failures.
+c) Financial losses from market fluctuations.
+
+Users are solely responsible for any risks associated with using the Software, including the management
+of cryptocurrency assets, safeguarding private keys, and ensuring compliance with local laws.
+
+The Software may be updated or modified from time to time. Each modification must include the full
+license text as outlined herein, ensuring that the rights and responsibilities are preserved in all
+distributed versions.
+
+It is strongly recommended that users perform regular security audits and backup their wallet data
+to prevent potential loss of funds. The authors provide guidance and best practices, but ultimate
+security is the responsibility of the user.
+
+In the event of any dispute regarding the interpretation or application of this license, the matter
+shall be resolved in accordance with the principles of open source software licensing and the
+jurisdiction applicable to the primary contributors of the Software.
+
+Users who distribute the Software in any form must include this license text in its entirety, without
+alteration or omission, in any associated documentation or distribution package.
+
+The authors and contributors reserve the right to update or clarify this license at any time, provided that
+such updates do not retroactively alter the terms under which previously distributed versions of the
+Software were provided.
+
+It is the duty of every user and contributor to ensure that the Software is used in a manner that is
+consistent with the values of transparency, security, and collaboration. Any misuse or misrepresentation
+of the Software in ways that could harm the open source community is strongly discouraged.
+
+The full text of this license must be included with every copy of the Software, and by using or modifying
+the Software, you agree to be bound by the terms stated herein without any further acknowledgment.
+
+This license represents a binding legal agreement between the user and the authors and contributors of the
+Software, and its provisions shall survive termination of any agreements or licenses related to the Software.
+
+The Software is distributed with the hope that it will be useful, but with no obligation on the part of the authors
+or contributors to provide maintenance, support, updates, enhancements, or modifications.
+
+By utilizing the Software, you affirm that you have read, understood, and agreed to all the terms and conditions
+set forth in this license, and you accept full responsibility for any actions taken in connection with its use.
+
+For further clarification or legal inquiries regarding this license, please contact the primary contributor at
+brdev@example.com or refer to the official repository on GitHub for updates and community discussions.
+
+This license supersedes any previous licensing agreements for the Software and establishes a clear framework
+for the distribution, modification, and use of Electrum Doge, ensuring that it remains free, open, and secure for all users.
