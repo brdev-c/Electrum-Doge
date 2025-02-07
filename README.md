@@ -2,7 +2,7 @@
 <html lang="en">
 <body>
 
-<h1>Electrum Doge Wallet 🐕</h1>
+<h1>Electrum Doge Wallet</h1>
 
 <p>
   A Dogecoin wallet built on the Electrum framework. Supports BIP39/BIP32 (12-word seeds),  
@@ -67,13 +67,7 @@ npm start</code></pre>
   <li><strong>Ledger</strong> (optional) for hardware security</li>
 </ol>
 
-<hr>
 
-<h2>Contributing 🤝</h2>
-<ul>
-  <li><strong>Issues:</strong> <a href="https://github.com/brdev/ElectrumDogeWallet/issues">Report bugs</a></li>
-  <li><strong>Pull Requests:</strong> <a href="https://github.com/brdev/ElectrumDogeWallet/pulls">Suggest changes</a></li>
-</ul>
 
 <hr>
 
