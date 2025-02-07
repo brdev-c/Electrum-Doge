@@ -1,129 +1,85 @@
-# Electrum Doge Wallet 🐕🚀
+<!DOCTYPE html>
+<html lang="en">
+<body>
 
-[![GitHub release (latest by date)](https://img.shields.io/github/v/release/brdev/ElectrumDogeWallet?color=green)](https://github.com/brdev/ElectrumDogeWallet/releases)  
-[![GitHub issues](https://img.shields.io/github/issues/brdev/ElectrumDogeWallet)](https://github.com/brdev/ElectrumDogeWallet/issues)  
-[![GitHub stars](https://img.shields.io/github/stars/brdev/ElectrumDogeWallet?style=social)](https://github.com/brdev/ElectrumDogeWallet/stargazers)
+<h1>Electrum Doge Wallet 🐕</h1>
 
-**Developer:** [brdev](https://github.com/brdev)  
-**Date:** February 03, 2025
+<p>
+  A Dogecoin wallet built on the Electrum framework. Supports BIP39/BIP32 (12-word seeds),  
+  single WIF private keys, partial Ledger integration, and custom Electrum servers.
+</p>
 
-**Electrum Doge** is a multi-address Dogecoin wallet that combines:
+<hr>
 
-- A React frontend (`src/` folder)
-- A Node.js backend (`src-back/` folder)
-- Electron integration (`main/` folder and `electron.js`) for desktop environments
+<h2>Key Features ⚙️</h2>
+<ul>
+  <li>Multiple addresses (external &amp; change) under one wallet</li>
+  <li>AES-256 encrypted wallet files (password-protected)</li>
+  <li>Connect to public or custom Dogecoin Electrum servers</li>
+  <li>Ledger hardware wallet (beta) for secure signing</li>
+  <li>React + Node.js + Electron for desktop builds</li>
+</ul>
 
-It supports wallets generated via BIP39/BIP32 (e.g., 12-word seed phrases), partial usage of Ledger hardware wallets, and custom Electrum servers for Dogecoin.
+<hr>
 
----
+<h2>Downloads 📦</h2>
+<p>
+  <strong><a href="https://github.com/brdev-c/Electrum-Doge/releases">Latest Release</a></strong><br>
+  (Windows, macOS, Linux)
+</p>
+<p>Or clone directly:</p>
+<pre><code>git clone https://github.com/brdev/ElectrumDogeWallet.git</code></pre>
 
-## 🚩 Key Features
+<hr>
 
-1. **Local or Ledger**
-   - Create or import seeds (BIP39) and single WIF private keys.
-   - Partial integration with Ledger for secure key storage.
-
-2. **Multi-Address Management**
-   - Automatic generation of external (receiving) and internal (change) addresses.
-   - Easily expand to new addresses if needed.
-
-3. **Encrypted Wallet Files**
-   - By default, AES-256 encryption protected by a user-defined password.
-
-4. **Electrum Servers**
-   - Connect to public or custom Dogecoin Electrum servers.
-   - Automatic failover or manual selection.
-
-5. **React + Electron**
-   - Modern UI built with React, packaged into an Electron desktop app.
-   - Optionally run the React frontend and Node.js backend separately in development mode.
-
----
-
-## 📥 Downloads
-
-- **[Latest Release](https://github.com/brdev-c/Electrum-Doge/releases)**  
-  Prebuilt binaries for Windows, macOS, and Linux.
-
-Alternatively, clone the repository directly:
-
-
-
-git clone https://github.com/brdev/ElectrumDogeWallet.git
-
----
-
-## 🛠 Installation & Usage
-
-1. **Install dependencies (root folder):**
-
+<h2>Installation &amp; Usage 💻</h2>
+<ol>
+  <li>
+    <strong>Install dependencies:</strong>
+    <pre><code>npm install</code></pre>
+  </li>
+  <li>
+    <strong>Start React frontend:</strong>
+    <pre><code>npm run start</code></pre>
+    Runs on <a href="http://localhost:3000">http://localhost:3000</a>
+  </li>
+  <li>
+    <strong>(Optional) Node.js backend:</strong>
+    <pre><code>cd src-back
 npm install
+npm start</code></pre>
+    Typically on <a href="http://localhost:3001">http://localhost:3001</a>
+  </li>
+</ol>
 
-2. **Start the React frontend:**
+<h3>Building Electron</h3>
+<pre><code>npm run electron:build</code></pre>
+<p>Output goes to <code>dist/</code> folder.</p>
 
-npm run start
+<hr>
 
+<h2>Basic Usage</h2>
+<ol>
+  <li><strong>Create/Import</strong> a wallet (BIP39 seed or WIF)</li>
+  <li><strong>Encryption</strong> with a user-defined password (AES-256)</li>
+  <li><strong>Addresses</strong> for external (receiving) and change</li>
+  <li><strong>Electrum Servers</strong> (public/custom)</li>
+  <li><strong>Ledger</strong> (optional) for hardware security</li>
+</ol>
 
-Runs on [http://localhost:3000](http://localhost:3000)
+<hr>
 
-3. **(Optional) Start the Node.js backend:**
+<h2>Contributing 🤝</h2>
+<ul>
+  <li><strong>Issues:</strong> <a href="https://github.com/brdev/ElectrumDogeWallet/issues">Report bugs</a></li>
+  <li><strong>Pull Requests:</strong> <a href="https://github.com/brdev/ElectrumDogeWallet/pulls">Suggest changes</a></li>
+</ul>
 
+<hr>
 
-cd src-back npm install npm start
+<h2>License 📄</h2>
+<p>Released under the <a href="LICENSE">MIT License</a>.</p>
+<p><strong>Note:</strong> Keep seed phrases safe. You are responsible for your private keys.</p>
 
-Typically runs on [http://localhost:3001](http://localhost:3001)
-
-### Building the Electron App
-
-To build a desktop application using Electron:
-
-
-npm run electron:build
-
-The bundled application will appear in the `dist/` folder (or equivalent).
-
----
-
-## 🚀 How to Use
-
-1. **Create or Import a Wallet**  
-   On first launch, choose **Create** (fresh BIP39 seed) or **Import** (existing seed/private key).
-
-2. **Password & Encryption**  
-   Set a password to encrypt wallet files securely (AES-256).
-
-3. **Manage Addresses**  
-   Use the **Addresses** section to view or generate addresses as needed.
-
-4. **Configure Electrum Servers**  
-   In the **Settings** panel, select public or custom Dogecoin Electrum servers.
-
-5. **Ledger Support (optional)**  
-   Connect your Ledger device and follow on-screen instructions for hardware-based security.
-
----
-
-## 🎨 Screenshots
-
-<details>
-  <summary>Sample Screenshot</summary>
-  <img src="https://user-images.githubusercontent.com/123456/your-screenshot.png" alt="Electrum Doge Wallet Screenshot" />
-</details>
-
----
-
-## 🤝 Contributing
-
-- **Report bugs**: [Issues](https://github.com/brdev/ElectrumDogeWallet/issues)  
-- **Submit improvements**: [Pull Requests](https://github.com/brdev/ElectrumDogeWallet/pulls)  
-- **Ask questions**: [Discussions](https://github.com/brdev/ElectrumDogeWallet/discussions) (if enabled)
-
----
-
-## 📄 License
-
-This project is released under the [MIT License](LICENSE).
-
----
-
-**Note**: By using Electrum Doge Wallet, you accept responsibility for keeping your keys and funds secure. Always keep offline backups of your wallets and seed phrases.
+</body>
+</html>
