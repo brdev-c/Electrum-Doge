@@ -28,7 +28,7 @@
   (Windows, macOS, Linux)
 </p>
 <p>Or clone directly:</p>
-<pre><code>git clone https://github.com/brdev/ElectrumDogeWallet.git</code></pre>
+<pre><code>git clone https://github.com/brdev-c/Electrum-Doge.git</code></pre>
 
 <hr>
 
