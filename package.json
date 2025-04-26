@@ -1,6 +1,6 @@
 {
   "name": "doge-wallet-desktop",
-  "version": "1.0.0",
+  "version": "1.4.2",
   "description": "Electrum Doge desktop wallet",
   "main": "src/main/electron.js",
   "private": true,
