@@ -1,72 +1,76 @@
-[![Latest Release](https://img.shields.io/github/v/release/brdev-c/Electrum-Doge?include_prereleases&style=flat-square)](https://github.com/brdev-c/Electrum-Doge/releases)
-[![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)](https://github.com/brdev-c/Electrum-Doge/blob/main/LICENSE)
-<!DOCTYPE html>
-<html lang="en">
-<body>
-<h1> 🌟 Electrum Doge Wallet</h1>
-<p>
-  A Dogecoin wallet built on the Electrum framework. Supports BIP39/BIP32 (12-word seeds),  
-  single WIF private keys, partial Ledger integration, and custom Electrum servers.
-</p>
+![Electrum Doge Banner](https://github.com/user-attachments/assets/27f58820-f2c3-42af-9b60-a0653a156c8a)
 
-<hr>
+[![Latest Release](https://img.shields.io/github/v/release/brdev-c/Electrum-Doge?include_prereleases\&style=for-the-badge)](https://github.com/brdev-c/Electrum-Doge/releases)
+[![MIT License](https://img.shields.io/badge/license-MIT-green.svg?style=for-the-badge)](LICENSE)
 
+> Lightweight Dogecoin wallet built on Electrum. Fast ⸱ Secure ⸱ Open‑source.
 
+---
 
-<hr>
+## Feature Map
 
-<h2>Downloads 📦</h2>
-<p>
-  <strong><a href="https://github.com/brdev-c/Electrum-Doge/releases">Latest Release</a></strong><br>
-  (Windows, macOS, Linux)
-</p>
-<p>Or clone directly:</p>
-<pre><code>git clone https://github.com/brdev-c/Electrum-Doge.git</code></pre>
+```mermaid
+mindmap
+  root((Electrum Doge))
+    Seeds
+      BIP‑39   
+      BIP‑32   
+    Keys
+      WIF Import   
+      Ledger Nano  
+    Network
+      Public Servers 
+      Custom Servers 
+    Build
+      Electron   
+      React  
+```
 
-<hr>
+---
 
-<h2>Installation &amp; Usage 💻</h2>
-<ol>
-  <li>
-    <strong>Install dependencies:</strong>
-    <pre><code>npm install</code></pre>
-  </li>
-  <li>
-    <strong>Start React frontend:</strong>
-    <pre><code>npm run start</code></pre>
-    Runs on <a href="http://localhost:3000">http://localhost:3000</a>
-  </li>
-  <li>
-    <strong>(Optional) Node.js backend:</strong>
-    <pre><code>cd src-back
-npm install
-npm start</code></pre>
-    Typically on <a href="http://localhost:3001">http://localhost:3001</a>
-  </li>
-</ol>
+## Architecture
 
-<h3>Building Electron</h3>
-<pre><code>npm run electron:build</code></pre>
-<p>Output goes to <code>dist/</code> folder.</p>
+```mermaid
+flowchart LR
+    subgraph Desktop
+        A[React UI] --> B{Wallet Core}
+    end
+    B -->|JSON‑RPC| C(Electrum Protocol)
+    C -->|SSL| D[Electrum Servers]
+    B -->|USB| E[Ledger Nano]
+```
 
-<hr>
+---
 
-<h2>Basic Usage</h2>
-<ol>
-  <li><strong>Create/Import</strong> a wallet (BIP39 seed or WIF)</li>
-  <li><strong>Encryption</strong> with a user-defined password (AES-256)</li>
-  <li><strong>Addresses</strong> for external (receiving) and change</li>
-  <li><strong>Electrum Servers</strong> (public/custom)</li>
-  <li><strong>Ledger</strong> (optional) for hardware security</li>
-</ol>
+## Get Started (dev)
 
+```bash
+npm install && npm run start   # http://localhost:3000
+```
 
+Build desktop app:
 
-<hr>
+```bash
+npm run electron:build         # ➜ dist/
+```
 
-<h2>License 📄</h2>
-<p>Released under the <a href="LICENSE">MIT License</a>.</p>
-<p><strong>Note:</strong> Keep seed phrases safe. You are responsible for your private keys.</p>
+Full setup docs → `docs/DEV.md`
 
-</body>
-</html>
+---
+
+## Downloads
+
+Grab pre‑built binaries for Windows, macOS, and Linux on the
+[Releases page](https://github.com/brdev-c/Electrum-Doge/releases).
+
+---
+
+## Security
+
+Your 12‑word seed **is** your wallet. Store it offline and verify signatures before installing.
+
+---
+
+## License
+
+MIT – see [LICENSE](LICENSE).
