@@ -13,37 +13,22 @@
 
 <p align="center"><b>Lightweight Dogecoin wallet built on Electrum • Fast ⸱ Secure ⸱ Open‑source</b></p>
 
----
 
-### Feature Map
 
-```mermaid
-mindmap
-  root((Electrum Doge))
-    🌱 Seeds
-      "BIP‑39 mnemonics"
-      "BIP‑32 HD tree"
-    🔑 Keys
-      "WIF Import"
-      "Ledger Nano"
-      "Trezor"
-      "Watch‑Only Mode"
-    🌐 Network
-      "Public Servers"
-      "Custom Servers"
-      "Tor Proxy"
-      "SSL Pinned"
-    ⚙️ Wallet Core
-      "Multi‑sig"
-      "Dynamic Fees"
-      "RBF / CPFP"
-    🛠️ Build & CI
-      "Electron"
-      "React"
-      "Cross‑platform CI"
-```
+<p align="center">
+  <a href="https://github.com/brdev-c/Electrum-Doge/releases/download/v.1.4.2/electrum-doge-1.4.2.exe">
+    <img src="https://img.shields.io/badge/Windows‑x64‑EXE-0078D6?logo=windows&logoColor=white&style=for-the-badge" alt="Download for Windows"/>
+  </a>
+  <a href="https://github.com/brdev-c/Electrum-Doge/releases/download/v.1.4.2/electrum-doge-1.4.2.dmg">
+    <img src="https://img.shields.io/badge/macOS‑Universal‑DMG-000000?logo=apple&logoColor=white&style=for-the-badge" alt="Download for macOS"/>
+  </a>
+  <a href="https://github.com/brdev-c/Electrum-Doge/releases/download/v.1.4.2/electrum-doge-1.4.2.AppImage">
+    <img src="https://img.shields.io/badge/Linux‑AppImage-FCC624?logo=linux&logoColor=black&style=for-the-badge" alt="Download for Linux"/>
+  </a>
+</p>
 
 ---
+
 
 ### Architecture
 
@@ -79,27 +64,8 @@ Full setup docs → [`docs/DEV.md`](docs/DEV.md)
 
 ---
 
-### Downloads
-
-<p align="center">
-  <a href="https://github.com/brdev-c/Electrum-Doge/releases/latest/download/ElectrumDoge-Setup.exe">
-    <img src="https://img.shields.io/badge/Windows‑x64‑EXE-0078D6?logo=windows&logoColor=white&style=for-the-badge" alt="Download for Windows"/>
-  </a>
-  <a href="https://github.com/brdev-c/Electrum-Doge/releases/latest/download/ElectrumDoge.dmg">
-    <img src="https://img.shields.io/badge/macOS‑Universal‑DMG-000000?logo=apple&logoColor=white&style=for-the-badge" alt="Download for macOS"/>
-  </a>
-  <a href="https://github.com/brdev-c/Electrum-Doge/releases/latest/download/electrum-doge.AppImage">
-    <img src="https://img.shields.io/badge/Linux‑AppImage-FCC624?logo=linux&logoColor=black&style=for-the-badge" alt="Download for Linux"/>
-  </a>
-</p>
 
 Signatures and checksums are provided on the [Releases](https://github.com/brdev-c/Electrum-Doge/releases) page.
-
----
-
-### Security
-
-Your 12‑word seed **is** your wallet. Back it up offline and verify signatures before installing any release.
 
 ---
 
