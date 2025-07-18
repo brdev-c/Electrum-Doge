@@ -11,14 +11,7 @@
 
 <hr>
 
-<h2>Key Features ⚙️</h2>
-<ul>
-  <li>Multiple addresses (external &amp; change) under one wallet</li>
-  <li>AES-256 encrypted wallet files (password-protected)</li>
-  <li>Connect to public or custom Dogecoin Electrum servers</li>
-  <li>Ledger hardware wallet (beta) for secure signing</li>
-  <li>React + Node.js + Electron for desktop builds</li>
-</ul>
+
 
 <hr>
 
