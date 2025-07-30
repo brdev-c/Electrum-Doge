@@ -16,13 +16,13 @@
 
 
 <p align="center">
-  <a href="https://github.com/brdev-c/Electrum-Doge/releases/download/v.1.4.2/electrum-doge-1.4.2.exe">
+  <a href="https://github.com/brdev-c/Electrum-Doge/releases/download/v1.4.3/Electrum-Doge.1.4.3.exe">
     <img src="https://img.shields.io/badge/Windows‑x64‑EXE-0078D6?logo=windows&logoColor=white&style=for-the-badge" alt="Download for Windows"/>
   </a>
-  <a href="https://github.com/brdev-c/Electrum-Doge/releases/download/v.1.4.2/electrum-doge-1.4.2.dmg">
+  <a href="https://github.com/brdev-c/Electrum-Doge/releases/download/v1.4.3/Electrum-Doge-1.4.3.dmg">
     <img src="https://img.shields.io/badge/macOS‑Universal‑DMG-000000?logo=apple&logoColor=white&style=for-the-badge" alt="Download for macOS"/>
   </a>
-  <a href="https://github.com/brdev-c/Electrum-Doge/releases/download/v.1.4.2/electrum-doge-1.4.2.AppImage">
+  <a href="https://github.com/brdev-c/Electrum-Doge/releases/download/v1.4.3/Electrum-Doge-1.4.3.AppImage">
     <img src="https://img.shields.io/badge/Linux‑AppImage-FCC624?logo=linux&logoColor=black&style=for-the-badge" alt="Download for Linux"/>
   </a>
 </p>
